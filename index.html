@@ -1,0 +1,946 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Política 8D — Test político ampliado</title>
+  <meta name="description" content="Test político multidimensional inspirado en Nolan, con ejes de tecnología, transhumanismo y gobernanza." />
+  <style>
+    :root{
+      --bg:#0b0d12;
+      --panel:#121620;
+      --panel2:#171c28;
+      --soft:#202737;
+      --text:#f3f5f7;
+      --muted:#9ba6b8;
+      --line:#2b3447;
+      --accent:#8ab4ff;
+      --accent2:#b69cff;
+      --good:#85d7b6;
+      --warn:#f4cc73;
+      --bad:#ff9a9a;
+      --shadow:0 18px 55px rgba(0,0,0,.28);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(900px 500px at 15% -5%, rgba(138,180,255,.12), transparent 55%),
+        radial-gradient(850px 500px at 100% 0%, rgba(182,156,255,.10), transparent 55%),
+        var(--bg);
+      color:var(--text);
+      min-height:100vh;
+    }
+    button,input{font:inherit}
+    a{color:var(--accent)}
+    .app{max-width:1180px;margin:0 auto;padding:28px 22px 70px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:34px}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:850;letter-spacing:-.03em}
+    .logo{
+      width:38px;height:38px;border-radius:12px;
+      display:grid;place-items:center;
+      background:linear-gradient(135deg,rgba(138,180,255,.25),rgba(182,156,255,.25));
+      border:1px solid rgba(255,255,255,.09);
+      box-shadow:var(--shadow)
+    }
+    .brand small{display:block;color:var(--muted);font-weight:600;letter-spacing:0;font-size:11px;margin-top:2px}
+    .ghost{
+      background:transparent;color:var(--text);border:1px solid var(--line);
+      padding:10px 14px;border-radius:12px;cursor:pointer
+    }
+    .ghost:hover{background:var(--panel2)}
+    .hero{display:grid;grid-template-columns:1.15fr .85fr;gap:24px;align-items:stretch}
+    .card{
+      background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,.012)),var(--panel);
+      border:1px solid rgba(255,255,255,.075);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+    .hero-copy{padding:38px}
+    .eyebrow{color:var(--accent);font-weight:800;font-size:13px;letter-spacing:.08em;text-transform:uppercase}
+    h1{font-size:clamp(42px,7vw,76px);line-height:.95;letter-spacing:-.06em;margin:14px 0 20px}
+    .lead{font-size:18px;line-height:1.65;color:#c3cada;max-width:700px}
+    .pillrow{display:flex;flex-wrap:wrap;gap:9px;margin:24px 0 30px}
+    .pill{border:1px solid var(--line);background:var(--panel2);padding:7px 10px;border-radius:999px;font-size:12px;color:#c8d0df}
+    .primary{
+      border:0;color:#09101f;background:linear-gradient(135deg,var(--accent),#c1d7ff);
+      padding:14px 18px;border-radius:14px;font-weight:850;cursor:pointer;
+      box-shadow:0 12px 26px rgba(138,180,255,.16)
+    }
+    .primary:hover{transform:translateY(-1px)}
+    .hero-side{padding:28px;display:flex;flex-direction:column;justify-content:space-between}
+    .mini-title{font-size:13px;color:var(--muted);font-weight:750;text-transform:uppercase;letter-spacing:.06em}
+    .axis-preview{display:grid;gap:14px;margin-top:18px}
+    .axis-mini{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;font-size:12px}
+    .axis-mini span:first-child{text-align:right;color:#98a4b7}
+    .axis-mini span:last-child{color:#d9deea}
+    .axis-dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 5px rgba(138,180,255,.1)}
+    .notice{margin-top:22px;padding:14px;border-radius:14px;background:rgba(244,204,115,.07);border:1px solid rgba(244,204,115,.16);color:#d8caa2;font-size:12px;line-height:1.55}
+
+    .screen{display:none}
+    .screen.active{display:block}
+    #quizScreen{max-width:860px;margin:20px auto 0}
+    .quiz-head{display:flex;justify-content:space-between;gap:18px;align-items:end;margin-bottom:16px}
+    .progress-wrap{flex:1}
+    .progress-meta{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin-bottom:8px}
+    .progress{height:8px;background:var(--soft);border-radius:999px;overflow:hidden}
+    .progress>div{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .25s ease}
+    .question-card{padding:32px}
+    .question-axis{font-size:12px;color:var(--accent);font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+    .question-number{font-size:13px;color:var(--muted);margin-top:8px}
+    .question-text{font-size:clamp(24px,4vw,38px);line-height:1.18;letter-spacing:-.035em;margin:18px 0 28px;font-weight:780}
+    .choices{display:grid;gap:10px}
+    .choice{
+      display:flex;gap:14px;align-items:center;width:100%;
+      background:var(--panel2);border:1px solid var(--line);color:var(--text);
+      padding:14px 16px;border-radius:14px;cursor:pointer;text-align:left;
+      transition:.15s ease
+    }
+    .choice:hover{border-color:#52627e;background:#1b2230;transform:translateY(-1px)}
+    .choice.selected{border-color:var(--accent);background:rgba(138,180,255,.09);box-shadow:0 0 0 2px rgba(138,180,255,.08)}
+    .choice-num{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;background:#0e121a;color:#aeb8c7;font-size:12px;font-weight:800}
+    .quiz-actions{display:flex;justify-content:space-between;margin-top:14px}
+    .hint{color:var(--muted);font-size:12px;margin-top:12px}
+
+    #resultsScreen{margin-top:14px}
+    .results-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:22px}
+    .results-head h2{font-size:42px;letter-spacing:-.04em;margin:0 0 10px}
+    .results-head p{color:var(--muted);margin:0;line-height:1.55;max-width:720px}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+    .tab{border:1px solid var(--line);background:var(--panel);color:#cbd2df;padding:10px 13px;border-radius:12px;cursor:pointer}
+    .tab.active{background:#1c2432;border-color:#4e607e;color:#fff}
+    .tabpane{display:none}
+    .tabpane.active{display:block}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .section-card{padding:24px}
+    .section-card h3{margin:0 0 6px;font-size:20px}
+    .section-card .sub{color:var(--muted);font-size:13px;line-height:1.55;margin-bottom:18px}
+    .axis-list{display:grid;gap:16px}
+    .axis-row{display:grid;gap:7px}
+    .axis-labels{display:flex;justify-content:space-between;gap:12px;font-size:12px;color:#aab4c5}
+    .axis-labels strong{color:#fff;font-size:13px}
+    .track{height:13px;background:linear-gradient(90deg,#222a3a,#2b3446);border-radius:999px;position:relative}
+    .track:after{content:"";position:absolute;left:50%;top:-3px;width:1px;height:19px;background:#59657a;opacity:.6}
+    .user-marker{position:absolute;top:50%;transform:translate(-50%,-50%);width:17px;height:17px;border-radius:50%;background:#fff;border:4px solid var(--accent);box-shadow:0 0 0 4px rgba(138,180,255,.12)}
+    .score-badge{font-size:11px;color:#0a1020;background:#d9e6ff;padding:3px 7px;border-radius:999px;font-weight:850}
+    .profile-summary{font-size:17px;line-height:1.7;color:#d6dce7}
+    .profile-summary strong{color:#fff}
+    .callout{margin-top:16px;border:1px solid rgba(138,180,255,.18);background:rgba(138,180,255,.06);padding:14px;border-radius:14px;color:#c9d9f6;font-size:13px;line-height:1.55}
+
+    .chartbox{position:relative;min-height:440px}
+    svg{width:100%;height:auto;display:block}
+    .legend{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
+    .legend-item{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:6px 9px;font-size:11px;color:#c9d1df}
+    .dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+    .actor-controls{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 18px}
+    .actor-chip{
+      border:1px solid var(--line);background:var(--panel2);color:#c7d0df;
+      border-radius:999px;padding:8px 11px;cursor:pointer;font-size:12px
+    }
+    .actor-chip.on{border-color:#617a9e;background:rgba(138,180,255,.08);color:#fff}
+    .filterbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+    .filter{border:1px solid var(--line);background:transparent;color:#abb5c6;border-radius:999px;padding:8px 11px;cursor:pointer;font-size:12px}
+    .filter.active{background:var(--panel2);color:#fff}
+    .actor-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .actor-card{border:1px solid var(--line);background:var(--panel2);border-radius:16px;padding:15px;cursor:pointer}
+    .actor-card:hover{border-color:#4f607d}
+    .actor-top{display:flex;align-items:center;gap:10px}
+    .avatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#263249,#1c2331);border:1px solid #3b4860;font-weight:850;font-size:12px}
+    .actor-name{font-weight:800}
+    .actor-meta{font-size:11px;color:var(--muted);margin-top:2px}
+    .actor-desc{font-size:12px;line-height:1.5;color:#b8c1d0;margin-top:10px}
+    .confidence{display:inline-flex;align-items:center;gap:5px;margin-top:10px;font-size:10px;color:#aeb8c7}
+    .confidence i{width:7px;height:7px;border-radius:50%;background:var(--warn)}
+    .method{display:grid;gap:12px}
+    .method details{border:1px solid var(--line);background:var(--panel2);border-radius:14px;padding:14px}
+    .method summary{cursor:pointer;font-weight:750}
+    .method p,.method li{color:#b7c0cf;font-size:13px;line-height:1.6}
+    .method ul{padding-left:18px}
+    .source-list{display:grid;gap:10px}
+    .source{border-left:2px solid #42516a;padding-left:12px}
+    .source a{font-size:12px;word-break:break-word}
+    .footer{margin-top:30px;color:#7f8999;font-size:11px;line-height:1.6;text-align:center}
+    .hidden{display:none!important}
+
+    @media (max-width:900px){
+      .hero,.grid2{grid-template-columns:1fr}
+      .actor-grid{grid-template-columns:1fr 1fr}
+      .hero-copy{padding:30px}
+      .hero-side{padding:24px}
+    }
+    @media (max-width:620px){
+      .app{padding:18px 14px 50px}
+      .topbar{align-items:flex-start}
+      .brand small{display:none}
+      .actor-grid{grid-template-columns:1fr}
+      .question-card{padding:22px}
+      .results-head{display:block}
+      .results-head .primary{margin-top:14px}
+      .quiz-actions{gap:10px}
+      .quiz-actions button{flex:1}
+    }
+  </style>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%23171c28%27/%3E%3Ctext x=%2732%27 y=%2742%27 font-family=%27sans-serif%27 font-size=%2726%27 font-weight=%27700%27 fill=%27%238ab4ff%27 text-anchor=%27middle%27%3E8D%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="css/p8d-extra.css" />
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">8D</div>
+      <div>Política 8D<small>Nolan + tecnología + transhumanismo</small></div>
+    </div>
+    <button class="ghost" id="aboutBtn">Metodología</button>
+  </header>
+
+  <main>
+    <section id="homeScreen" class="screen active">
+      <div class="banner warn hidden" id="hashNotice" role="status">
+        <span>El enlace compartido no es válido o está incompleto. Podés hacer el test igual.</span>
+        <button type="button" class="ghost small" id="btnHashNoticeClose">Cerrar</button>
+      </div>
+      <div class="banner hidden" id="friendPending" role="status">
+        <span>Tenés un resultado compartido para comparar. Hacé el test y al terminar vas a ver “Vos vs tu amigo”.</span>
+        <button type="button" class="ghost small" id="btnDiscardFriend">Descartar</button>
+      </div>
+      <div class="hero">
+        <div class="card hero-copy">
+          <div class="eyebrow">Test político multidimensional</div>
+          <h1>Más allá de izquierda y derecha.</h1>
+          <p class="lead">
+            48 afirmaciones, 8 ejes y un mapa político que combina libertad económica y personal con
+            autoridad, soberanía, transhumanismo, modificación humana, tecnocracia y progreso tecnológico.
+          </p>
+          <div class="pillrow">
+            <span class="pill">48 preguntas</span>
+            <span class="pill">8 dimensiones</span>
+            <span class="pill">Mapa Nolan</span>
+            <span class="pill">Comparación con referentes</span>
+            <span class="pill">Sin registro</span>
+          </div>
+          <button class="primary" id="startBtn">Empezar el test</button>
+        </div>
+
+        <aside class="card hero-side">
+          <div>
+            <div class="mini-title">Los 8 ejes</div>
+            <div class="axis-preview">
+              <div class="axis-mini"><span>Estado</span><i class="axis-dot"></i><span>Mercado</span></div>
+              <div class="axis-mini"><span>Control social</span><i class="axis-dot"></i><span>Libertad personal</span></div>
+              <div class="axis-mini"><span>Centralización</span><i class="axis-dot"></i><span>Descentralización</span></div>
+              <div class="axis-mini"><span>Soberanismo</span><i class="axis-dot"></i><span>Cosmopolitismo</span></div>
+              <div class="axis-mini"><span>Bioconservación</span><i class="axis-dot"></i><span>Transhumanismo</span></div>
+              <div class="axis-mini"><span>Regulación corporal</span><i class="axis-dot"></i><span>Libertad morfológica</span></div>
+              <div class="axis-mini"><span>Democracia humana</span><i class="axis-dot"></i><span>Tecnocracia</span></div>
+              <div class="axis-mini"><span>Precaución</span><i class="axis-dot"></i><span>Tecnooptimismo</span></div>
+            </div>
+          </div>
+          <div class="notice">
+            Esto no es un instrumento psicométrico validado. Sirve para explorar posiciones y tensiones internas.
+            Los puntos de figuras públicas son estimaciones editoriales basadas en posiciones públicas, no “puntajes verdaderos”.
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="quizScreen" class="screen">
+      <div class="quiz-head">
+        <div class="progress-wrap">
+          <div class="progress-meta"><span id="progressLabel">Pregunta 1 de 48</span><span id="progressPct">2%</span></div>
+          <div class="progress"><div id="progressBar"></div></div>
+        </div>
+      </div>
+
+      <div class="card question-card">
+        <div class="question-axis" id="questionAxis"></div>
+        <div class="question-number" id="questionNumber"></div>
+        <div class="question-text" id="questionText"></div>
+        <div class="choices" id="choices"></div>
+        <div class="hint">Podés usar las teclas 1–5 para responder. Tu progreso queda guardado en este navegador.</div>
+      </div>
+
+      <div class="quiz-actions">
+        <button class="ghost" id="prevBtn">← Anterior</button>
+        <button class="ghost" id="exitBtn">Salir</button>
+      </div>
+    </section>
+
+    <section id="resultsScreen" class="screen">
+      <div class="results-head">
+        <div>
+          <h2>Tu mapa político</h2>
+          <p>
+            Tus resultados se muestran como tendencias, no como etiquetas rígidas. Usá las referencias públicas
+            para comparar patrones, no para inferir que compartís toda la ideología de una persona.
+          </p>
+        </div>
+        <div class="head-actions">
+          <button class="primary" id="btnShareResult">Compartir mi resultado</button>
+          <button class="ghost" id="retakeBtn">Rehacer test</button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="summary">Resumen</button>
+        <button class="tab" data-tab="nolan">Mapa Nolan</button>
+        <button class="tab" data-tab="radar">Radar 8D</button>
+        <button class="tab" data-tab="actors">Referentes</button>
+        <button class="tab" data-tab="method">Metodología</button>
+        <button class="tab" data-tab="share">Carnet y compartir</button>
+        <button class="tab hidden" data-tab="compare">Vos vs tu amigo</button>
+      </div>
+
+      <div class="tabpane active" id="tab-summary">
+        <div class="grid2">
+          <div class="card section-card">
+            <h3>Ocho dimensiones</h3>
+            <div class="sub">Tu posición va de 0 a 100. El centro (50) indica una postura mixta o contextual.</div>
+            <div class="axis-list" id="axisList"></div>
+          </div>
+          <div class="card section-card">
+            <h3>Lectura rápida</h3>
+            <div class="sub">Una síntesis automática de los ejes donde más te alejás del centro.</div>
+            <div class="profile-summary" id="profileSummary"></div>
+            <div class="callout" id="closestSummary"></div>
+          </div>
+        </div>
+        <div class="card section-card top-ref-section" id="topReferents">
+          <h3>Referente más parecido</h3>
+          <div class="sub">Similitud dentro del modelo Política 8D. Es aproximada: no es una medición científica ni indica afinidad política.</div>
+          <div class="ref-grid" id="topReferentsCards"></div>
+        </div>
+      </div>
+
+      <div class="tabpane" id="tab-nolan">
+        <div class="card section-card">
+          <h3>Mapa Nolan</h3>
+          <div class="sub">Eje horizontal: libertad económica. Eje vertical: libertad personal. Los referentes son aproximaciones.</div>
+          <div class="chartbox" id="nolanChart"></div>
+          <div class="legend" id="nolanLegend"></div>
+        </div>
+      </div>
+
+      <div class="tabpane" id="tab-radar">
+        <div class="card section-card">
+          <h3>Radar 8D</h3>
+          <div class="sub">Elegí hasta tres referentes para superponerlos sobre tu perfil.</div>
+          <div class="actor-controls" id="radarControls"></div>
+          <div class="chartbox" id="radarChart"></div>
+          <div class="legend" id="radarLegend"></div>
+        </div>
+      </div>
+
+      <div class="tabpane" id="tab-actors">
+        <div class="card section-card">
+          <h3>Referentes políticos y tecnológicos</h3>
+          <div class="sub">
+            Los valores de figuras públicas son estimaciones revisables. Cuando un eje carece de evidencia suficiente,
+            puede quedar sin puntuar y no cuenta para la distancia.
+          </div>
+          <div class="filterbar">
+            <button class="filter active" data-filter="all">Todos</button>
+            <button class="filter" data-filter="arg">Argentina</button>
+            <button class="filter" data-filter="global">Global</button>
+            <button class="filter" data-filter="tech">Tecnología / ideas</button>
+          </div>
+          <div class="actor-grid" id="actorGrid"></div>
+        </div>
+      </div>
+
+      <div class="tabpane" id="tab-method">
+        <div class="card section-card method" id="methodContent"></div>
+      </div>
+
+      <div class="tabpane" id="tab-share">
+        <div class="share-layout">
+          <div class="card section-card share-controls">
+            <h3>Tu carnet Política 8D</h3>
+            <div class="sub">Elegí una plantilla y un formato. La imagen se genera en tu dispositivo, sin enviar nada a ningún servidor.</div>
+
+            <div class="field">
+              <span class="field-label">Plantilla</span>
+              <div class="seg" id="templateSelector" role="group" aria-label="Plantilla"></div>
+            </div>
+            <div class="field">
+              <span class="field-label">Formato</span>
+              <div class="seg" id="formatSelector" role="group" aria-label="Formato"></div>
+            </div>
+            <div class="field">
+              <label class="field-label" for="carnetAlias">Nombre, alias o @usuario (opcional)</label>
+              <input type="text" id="carnetAlias" class="text-input" maxlength="32" autocomplete="off" spellcheck="false" placeholder="@tu_alias" />
+              <div class="field-note">Se usa sólo en tu dispositivo para dibujar la imagen. No se envía ni se guarda en el enlace.</div>
+            </div>
+            <div class="field">
+              <label class="field-label" for="shareText">Texto para compartir</label>
+              <textarea id="shareText" class="text-input" rows="6" readonly></textarea>
+            </div>
+
+            <div class="share-actions">
+              <button type="button" class="primary" id="btnShare">Compartir</button>
+              <button type="button" class="ghost" id="btnDownload">Descargar imagen</button>
+              <button type="button" class="ghost" id="btnCopyLink">Copiar enlace</button>
+              <button type="button" class="ghost" id="btnCopySummary">Copiar resumen</button>
+            </div>
+            <div class="field-note privacy-inline">Compartir es siempre voluntario. Nada se publica automáticamente.</div>
+          </div>
+
+          <div class="card section-card carnet-preview">
+            <div class="mini-title">Vista previa</div>
+            <canvas id="carnetCanvas" width="1080" height="1350" aria-label="Vista previa del carnet Política 8D"></canvas>
+          </div>
+        </div>
+
+        <div class="card section-card privacy-card" id="privacyShare">
+          <h3>Privacidad</h3>
+          <div id="privacyShareBody"></div>
+        </div>
+      </div>
+
+      <div class="tabpane" id="tab-compare">
+        <div class="card section-card">
+          <h3>Vos vs tu amigo</h3>
+          <div class="sub">Comparación eje por eje entre tu resultado y el que te compartieron. Sólo se usan los 8 puntajes agregados.</div>
+          <div class="legend compare-legend">
+            <span class="legend-item"><i class="dot" style="background:#8ab4ff"></i>Vos</span>
+            <span class="legend-item"><i class="dot" style="background:#85d7b6"></i>Tu amigo</span>
+          </div>
+          <div class="grid2 compare-grid">
+            <div class="axis-list" id="compareRows"></div>
+            <div>
+              <div class="chartbox compare-radar" id="compareRadar"></div>
+              <div class="compat">
+                <div class="compat-num" id="compareCompat"></div>
+                <div class="field-note">Es sólo una medida de cercanía en estos 8 ejes; no resume afinidad política ni personal.</div>
+              </div>
+              <div class="callout"><strong>Mayor coincidencia</strong><br><span id="compareBest"></span></div>
+              <div class="callout"><strong>Mayor diferencia</strong><br><span id="compareWorst"></span></div>
+            </div>
+          </div>
+          <div class="share-actions compare-actions">
+            <button type="button" class="primary" id="btnDownloadCompare">Descargar comparación</button>
+            <button type="button" class="ghost" id="btnGoShare">Compartir mi resultado para que me compare</button>
+            <button type="button" class="ghost" id="btnRemoveCompare">Quitar comparación</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="sharedScreen" class="screen">
+      <div class="results-head">
+        <div>
+          <div class="eyebrow">Enlace compartido</div>
+          <h2>Resultado compartido de Política 8D</h2>
+          <p>Este enlace contiene únicamente las puntuaciones que decidiste compartir.
+            No incluye respuestas individuales, nombre ni datos personales.</p>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="card section-card">
+          <h3>Sus ocho dimensiones</h3>
+          <div class="sub">Puntajes de 0 a 100. El centro (50) indica una postura mixta o contextual.</div>
+          <div class="axis-list" id="sharedAxes"></div>
+        </div>
+        <div class="card section-card">
+          <h3>Radar 8D</h3>
+          <div class="chartbox shared-radar" id="sharedRadar"></div>
+          <div class="callout" id="sharedReferent"></div>
+        </div>
+      </div>
+      <div class="share-actions shared-actions">
+        <button type="button" class="primary" id="btnCompareStart">Hacer mi test y comparar</button>
+        <button type="button" class="ghost hidden" id="btnCompareNow">Comparar con mi último resultado</button>
+        <button type="button" class="ghost" id="btnSharedHome">Ir al inicio</button>
+      </div>
+    </section>
+  </main>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <div class="footer">
+    Política 8D · prototipo estático · datos del usuario guardados sólo en localStorage ·
+    perfiles públicos aproximados y editables.
+  </div>
+</div>
+
+<script>
+const AXES = {
+  econ: {name:"Economía", low:"Más Estado", high:"Más mercado", short:"Mercado"},
+  personal: {name:"Libertades personales", low:"Control social", high:"Libertad personal", short:"Libertad"},
+  authority: {name:"Autoridad", low:"Centralización", high:"Descentralización", short:"Descentral."},
+  global: {name:"Soberanía", low:"Soberanismo", high:"Cosmopolitismo", short:"Global"},
+  trans: {name:"Transhumanismo", low:"Bioconservación", high:"Transhumanismo", short:"Transhuman."},
+  morph: {name:"Modificación humana", low:"Regulación biológica", high:"Libertad morfológica", short:"Morfología"},
+  technoGov: {name:"Gobernanza", low:"Democracia humana", high:"Tecnocracia / algoritmos", short:"Tecnocracia"},
+  techno: {name:"Tecnología", low:"Precaución", high:"Tecnooptimismo", short:"Tecnooptim."}
+};
+
+const QUESTIONS = [
+  ["econ", 1, "Las personas deberían poder disponer de sus ingresos y propiedades con la menor interferencia estatal posible."],
+  ["econ",-1, "El Estado debería garantizar servicios esenciales incluso si eso requiere impuestos considerablemente más altos."],
+  ["econ", 1, "En general, los mercados competitivos asignan recursos mejor que la planificación gubernamental."],
+  ["econ",-1, "Las grandes desigualdades económicas justifican políticas agresivas de redistribución."],
+  ["econ", 1, "Debería ser relativamente fácil crear empresas, contratar trabajadores y comerciar sin permisos excesivos."],
+  ["econ",-1, "Sectores estratégicos como energía, transporte o telecomunicaciones deberían estar bajo fuerte control público."],
+
+  ["personal", 1, "Los adultos deberían ser libres de tomar decisiones sobre su propio cuerpo aunque esas decisiones sean perjudiciales para ellos mismos."],
+  ["personal",-1, "El Estado debería restringir determinadas conductas privadas para preservar valores sociales importantes."],
+  ["personal", 1, "La libertad de expresión debería proteger incluso opiniones profundamente ofensivas mientras no constituyan amenazas o delitos directos."],
+  ["personal",-1, "Una sociedad necesita ciertos límites legales sobre expresiones que puedan generar daño social."],
+  ["personal", 1, "Las decisiones sobre estilo de vida, relaciones personales y sexualidad deberían pertenecer principalmente al individuo."],
+  ["personal",-1, "El gobierno debería intervenir más activamente para fomentar determinados modelos familiares o culturales."],
+
+  ["authority", 1, "Es preferible tolerar cierto desorden social antes que conceder demasiado poder al Estado."],
+  ["authority",-1, "En situaciones de crisis, un gobierno fuerte debería poder limitar temporalmente algunas libertades."],
+  ["authority", 1, "Las decisiones políticas deberían tomarse lo más cerca posible de las comunidades afectadas."],
+  ["authority",-1, "Un gobierno central fuerte suele ser más eficaz que múltiples autoridades locales independientes."],
+  ["authority", 1, "La vigilancia masiva de ciudadanos inocentes no debería aceptarse aunque reduzca ciertos riesgos de seguridad."],
+  ["authority",-1, "Si una medida de seguridad reduce significativamente el crimen o el terrorismo, cierta pérdida de privacidad puede ser aceptable."],
+
+  ["global",-1, "Los gobiernos deberían priorizar los intereses de sus propios ciudadanos sobre objetivos internacionales."],
+  ["global", 1, "A largo plazo sería positivo que las instituciones supranacionales tuvieran mayor autoridad sobre determinados asuntos globales."],
+  ["global", 1, "La inmigración debería ser relativamente abierta mientras las personas respeten las leyes del país receptor."],
+  ["global",-1, "Un país necesita un fuerte control migratorio para preservar estabilidad social y cultural."],
+  ["global",-1, "Las identidades nacionales siguen siendo políticamente importantes y deberían protegerse."],
+  ["global", 1, "La humanidad debería avanzar gradualmente hacia estructuras políticas más globales y menos dependientes del Estado-nación."],
+
+  ["trans", 1, "Si fuera seguro, los adultos deberían poder modificar genéticamente su propio cuerpo para mejorar capacidades físicas o cognitivas."],
+  ["trans",-1, "Existen ciertos límites biológicos humanos que no deberíamos intentar superar deliberadamente."],
+  ["trans", 1, "Extender radicalmente la esperanza de vida humana sería un objetivo deseable para la sociedad."],
+  ["trans",-1, "Una vida humana extremadamente prolongada podría producir problemas sociales que justificaran limitar esas tecnologías."],
+  ["trans", 1, "Una persona debería tener derecho a incorporar implantes, prótesis avanzadas o interfaces cerebro-computadora incluso cuando no exista una necesidad médica."],
+  ["trans",-1, "Las mejoras tecnológicas deberían utilizarse principalmente para tratar enfermedades, no para superar las capacidades humanas normales."],
+
+  ["morph", 1, "Si pudiéramos eliminar de forma segura enfermedades hereditarias modificando embriones, deberíamos hacerlo."],
+  ["morph",-1, "Modificar genéticamente embriones humanos es demasiado arriesgado moralmente incluso si la tecnología llegara a ser muy segura."],
+  ["morph", 1, "Los padres deberían poder elegir determinadas características biológicas de sus hijos si no les causan daño."],
+  ["morph",-1, "Permitir mejoras genéticas podría crear castas biológicas y por eso debería estar fuertemente restringido."],
+  ["morph", 1, "En principio, cada adulto debería tener derecho a alterar profundamente su cuerpo, incluso de maneras que hoy consideraríamos radicales."],
+  ["morph",-1, "Hay modificaciones del cuerpo humano que deberían prohibirse aunque una persona adulta las desee libremente."],
+
+  ["technoGov",-1, "Las decisiones políticas importantes deberían seguir perteneciendo a representantes humanos aunque una IA pudiera tomar decisiones objetivamente mejores."],
+  ["technoGov", 1, "Si sistemas de IA demostraran ser consistentemente mejores administrando determinadas políticas públicas, deberíamos delegarles parte de esas decisiones."],
+  ["technoGov", 1, "Los expertos deberían tener más influencia política en áreas técnicas aunque eso reduzca parcialmente el control democrático directo."],
+  ["technoGov",-1, "Una decisión democrática debería respetarse incluso cuando la mayoría contradiga claramente el consenso de los expertos."],
+  ["technoGov",-1, "Sería peligroso que una pequeña élite técnica controlara sistemas de IA capaces de administrar grandes partes de la sociedad."],
+  ["technoGov", 1, "Una administración altamente automatizada podría ser preferible a la política tradicional si redujera corrupción, burocracia e ineficiencia."],
+
+  ["techno", 1, "La innovación tecnológica debería permitirse por defecto y regularse sólo cuando aparezcan riesgos claros."],
+  ["techno",-1, "Las tecnologías nuevas deberían demostrar previamente que son seguras antes de difundirse ampliamente."],
+  ["techno", 1, "El crecimiento económico y tecnológico puede resolver buena parte de los problemas ambientales."],
+  ["techno",-1, "Sería aceptable reducir significativamente el crecimiento económico para proteger ecosistemas y recursos naturales."],
+  ["techno", 1, "Energía nuclear, biotecnología y agricultura avanzada deberían formar parte importante de una estrategia ambiental moderna."],
+  ["techno",-1, "Algunas tecnologías deberían abandonarse incluso si producen grandes beneficios económicos cuando generan alteraciones profundas del medio ambiente."]
+];
+
+// IMPORTANTE: estos perfiles son estimaciones editoriales, no mediciones científicas.
+// null = no se usa ese eje para calcular cercanía.
+const ACTORS = [
+  {id:"milei", name:"Javier Milei", initials:"JM", region:"arg", tags:["arg","tech"], confidence:"media",
+   desc:"Liberal/libertario en economía; fuerte énfasis en desregulación y adopción tecnológica.",
+   scores:{econ:96,personal:68,authority:58,global:38,trans:70,morph:null,technoGov:58,techno:88}},
+  {id:"cfk", name:"Cristina F. de Kirchner", initials:"CFK", region:"arg", tags:["arg"], confidence:"media",
+   desc:"Peronismo/kirchnerismo, mayor intervención estatal y posiciones socialmente progresistas en varios temas.",
+   scores:{econ:24,personal:70,authority:32,global:58,trans:null,morph:null,technoGov:42,techno:50}},
+  {id:"macri", name:"Mauricio Macri", initials:"MM", region:"arg", tags:["arg"], confidence:"media",
+   desc:"Centroderecha promercado y modernización estatal, con perfil institucional más moderado.",
+   scores:{econ:72,personal:61,authority:50,global:64,trans:null,morph:null,technoGov:62,techno:68}},
+  {id:"kicillof", name:"Axel Kicillof", initials:"AK", region:"arg", tags:["arg"], confidence:"media",
+   desc:"Peronismo de izquierda; defensa explícita de un rol económico fuerte del Estado.",
+   scores:{econ:18,personal:70,authority:35,global:56,trans:null,morph:null,technoGov:52,techno:46}},
+  {id:"bregman", name:"Myriam Bregman", initials:"MB", region:"arg", tags:["arg"], confidence:"media-baja",
+   desc:"Izquierda socialista, fuerte agenda de libertades civiles y crítica del capitalismo.",
+   scores:{econ:5,personal:91,authority:58,global:78,trans:null,morph:65,technoGov:25,techno:38}},
+  {id:"rebord", name:"Tomás Rebord", initials:"TR", region:"arg", tags:["arg"], confidence:"media-baja",
+   desc:"Comunicador identificado públicamente con el peronismo; puntajes tecnológicos con baja evidencia.",
+   scores:{econ:30,personal:74,authority:45,global:56,trans:null,morph:null,technoGov:null,techno:null}},
+  {id:"rosemblat", name:"Pedro Rosemblat", initials:"PR", region:"arg", tags:["arg"], confidence:"media-baja",
+   desc:"Comunicador que se identifica como peronista; se evita imputarle posiciones técnicas no documentadas.",
+   scores:{econ:28,personal:74,authority:45,global:55,trans:null,morph:null,technoGov:null,techno:null}},
+  {id:"tipito", name:"Tipito Enojado", initials:"TE", region:"arg", tags:["arg"], confidence:"media-baja",
+   desc:"Divulgador/influencer libertario con fuerte crítica al tamaño del Estado y a la carga tributaria.",
+   scores:{econ:91,personal:70,authority:66,global:40,trans:null,morph:null,technoGov:null,techno:72}},
+  {id:"gordodan", name:"Gordo Dan", initials:"GD", region:"arg", tags:["arg"], confidence:"media-baja",
+   desc:"Influencer y militante digital alineado con La Libertad Avanza; perfil cultural más conservador.",
+   scores:{econ:88,personal:46,authority:46,global:28,trans:null,morph:null,technoGov:null,techno:68}},
+
+  {id:"trump", name:"Donald Trump", initials:"DT", region:"global", tags:["global"], confidence:"media",
+   desc:"Nacional-conservadurismo, fronteras estrictas, proteccionismo selectivo y desregulación en varios sectores.",
+   scores:{econ:64,personal:40,authority:27,global:12,trans:null,morph:30,technoGov:43,techno:76}},
+  {id:"xi", name:"Xi Jinping", initials:"XJ", region:"global", tags:["global","tech"], confidence:"media",
+   desc:"Estado centralizado, economía dirigida con mercado, fuerte planificación tecnológica.",
+   scores:{econ:25,personal:7,authority:5,global:42,trans:null,morph:20,technoGov:91,techno:91}},
+  {id:"musk", name:"Elon Musk", initials:"EM", region:"global", tags:["global","tech"], confidence:"media",
+   desc:"Deregulación, libertad de expresión, IA/robótica y neurotecnología con fuerte tecnooptimismo.",
+   scores:{econ:90,personal:80,authority:66,global:54,trans:90,morph:84,technoGov:74,techno:97}},
+  {id:"thiel", name:"Peter Thiel", initials:"PT", region:"global", tags:["global","tech"], confidence:"media",
+   desc:"Capitalismo libertario, crítica a la democracia de masas y fuerte apuesta por tecnologías disruptivas.",
+   scores:{econ:95,personal:66,authority:58,global:30,trans:88,morph:80,technoGov:90,techno:96}},
+  {id:"harari", name:"Yuval Noah Harari", initials:"YNH", region:"global", tags:["global","tech"], confidence:"media",
+   desc:"Globalista en cooperación, pero muy cauteloso sobre IA, vigilancia y concentración algorítmica del poder.",
+   scores:{econ:45,personal:78,authority:33,global:90,trans:48,morph:48,technoGov:35,techno:34}},
+  {id:"kurzweil", name:"Ray Kurzweil", initials:"RK", region:"global", tags:["tech"], confidence:"media-baja",
+   desc:"Uno de los referentes históricos del transhumanismo, longevidad radical y optimismo sobre IA.",
+   scores:{econ:null,personal:76,authority:null,global:62,trans:100,morph:95,technoGov:60,techno:100}},
+  {id:"altman", name:"Sam Altman", initials:"SA", region:"global", tags:["tech","global"], confidence:"media-baja",
+   desc:"Apuesta intensa por IA avanzada y acceso amplio a la tecnología, con aceptación explícita de ciertos riesgos.",
+   scores:{econ:68,personal:70,authority:48,global:72,trans:78,morph:null,technoGov:70,techno:95}}
+];
+
+const SOURCES = [
+  {label:"Javier Milei — discurso económico oficial (Argentina.gob.ar, 2026)", url:"https://www.argentina.gob.ar/noticias/milei-no-voy-cambiar-ni-la-politica-fiscal-ni-la-politica-monetaria"},
+  {label:"Javier Milei — libertad y programa económico (Argentina.gob.ar, 2026)", url:"https://www.argentina.gob.ar/noticias/milei-en-el-congreso-anual-del-iaef-construimos-el-programa-que-la-argentina-necesitaba"},
+  {label:"Axel Kicillof — rol del Estado y mercado (Gobierno PBA, 2026)", url:"https://www.gba.gob.ar/comunicacion_publica/gacetillas/kicillof_la_idea_de_que_el_mercado_y_el_capitalismo_pueden_funcionar"},
+  {label:"Pedro Rosemblat — identificación como peronista (Infobae, 2026)", url:"https://www.infobae.com/politica/2026/05/22/pedro-rosemblat-confirmo-que-no-va-a-ser-candidato-y-pidio-que-se-celebre-una-interna-en-el-peronismo/"},
+  {label:"Tipito Enojado — posición sobre Estado e impuestos (Infobae, 2026)", url:"https://www.infobae.com/politica/2026/05/14/tipito-enojado-influencer-libertario-la-mayoria-que-voto-a-milei-no-esta-de-acuerdo-con-la-convocatoria-universitaria/"},
+  {label:"Gordo Dan — trayectoria en el espacio libertario (La Nación, 2024)", url:"https://www.lanacion.com.ar/politica/el-gordo-dan-el-comandante-que-milito-en-un-hospital-publico-y-hoy-embiste-desde-las-redes-para-nid03082024/"},
+  {label:"Peter Thiel — libertad, democracia y política (The Guardian, 2022)", url:"https://www.theguardian.com/technology/2022/oct/15/peter-thiel-who-is-he-republican-donor-tech-entrepreneur"},
+  {label:"Donald Trump — política migratoria y fronteriza (White House, 2026)", url:"https://www.whitehouse.gov/releases/2026/09/president-trump-delivers-historic-results-for-the-american-people-in-under-two-years/"},
+  {label:"Donald Trump — política arancelaria (White House, 2026)", url:"https://www.whitehouse.gov/presidential-actions/2026/02/imposing-a-temporary-import-surcharge-to-address-fundamental-international-payments-problems/"},
+  {label:"Elon Musk — regulación y libertad de expresión en X (Reuters, 2026)", url:"https://www.reuters.com/world/judge-dismisses-lawsuit-by-elon-musks-x-challenging-new-york-hate-speech-law-2026-08-26/"},
+  {label:"Sam Altman — beneficios, riesgos y acceso a IA (Reuters, 2026)", url:"https://www.reuters.com/business/openais-altman-says-ai-benefits-warrant-accepting-some-risks-2026-10-04/"},
+  {label:"Milei–Harari — debate sobre empresas administradas por IA (El País, 2026)", url:"https://elpais.com/argentina/2026-06-19/milei-responde-a-harari-sobre-dar-personeria-juridica-a-los-agentes-de-ia-no-significa-lanzar-el-dia-del-juicio-final-de-terminator.html"}
+];
+
+const CHOICES = [
+  [1,"Totalmente en desacuerdo"],
+  [2,"En desacuerdo"],
+  [3,"Neutral / depende"],
+  [4,"De acuerdo"],
+  [5,"Totalmente de acuerdo"]
+];
+
+let current = 0;
+let answers = Array(QUESTIONS.length).fill(null);
+let results = null;
+let radarSelected = ["milei","musk","harari"];
+let actorFilter = "all";
+
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+
+function showScreen(id){
+  $$(".screen").forEach(x=>x.classList.remove("active"));
+  $("#"+id).classList.add("active");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function loadProgress(){
+  try{
+    const saved = JSON.parse(localStorage.getItem("politica8d-progress") || "null");
+    if(saved && Array.isArray(saved.answers) && saved.answers.length===QUESTIONS.length){
+      answers = saved.answers;
+      current = Math.min(Math.max(saved.current||0,0),QUESTIONS.length-1);
+    }
+  }catch(e){}
+}
+function saveProgress(){
+  localStorage.setItem("politica8d-progress", JSON.stringify({answers,current}));
+}
+function clearProgress(){ localStorage.removeItem("politica8d-progress"); }
+
+function renderQuestion(){
+  const [axis,,text] = QUESTIONS[current];
+  $("#questionAxis").textContent = AXES[axis].name;
+  $("#questionNumber").textContent = `Pregunta ${current+1} de ${QUESTIONS.length}`;
+  $("#questionText").textContent = text;
+  $("#progressLabel").textContent = `Pregunta ${current+1} de ${QUESTIONS.length}`;
+  const pct = Math.round(((current+1)/QUESTIONS.length)*100);
+  $("#progressPct").textContent = pct+"%";
+  $("#progressBar").style.width = pct+"%";
+
+  $("#choices").innerHTML = CHOICES.map(([v,label]) => `
+    <button class="choice ${answers[current]===v?"selected":""}" data-value="${v}">
+      <span class="choice-num">${v}</span><span>${label}</span>
+    </button>
+  `).join("");
+
+  $$("#choices .choice").forEach(btn => btn.onclick = () => choose(+btn.dataset.value));
+  $("#prevBtn").disabled = current===0;
+  $("#prevBtn").style.opacity = current===0 ? .45 : 1;
+}
+
+function choose(v){
+  answers[current]=v;
+  saveProgress();
+  if(current < QUESTIONS.length-1){
+    current++;
+    renderQuestion();
+  }else{
+    finishTest();
+  }
+}
+
+function finishTest(){
+  if(answers.some(v=>v===null)){
+    current = answers.findIndex(v=>v===null);
+    renderQuestion(); return;
+  }
+  results = calculateResults();
+  clearProgress();
+  renderResults();
+  onResultsReady();
+  showScreen("resultsScreen");
+}
+
+function calculateResults(){
+  const out={};
+  Object.keys(AXES).forEach(axis=>{
+    const vals=[];
+    QUESTIONS.forEach((q,i)=>{
+      if(q[0]===axis){
+        const centered=(answers[i]-3)/2; // -1..1
+        vals.push(centered*q[1]);
+      }
+    });
+    const avg=vals.reduce((a,b)=>a+b,0)/vals.length;
+    out[axis]=Math.round((50+avg*50)*10)/10;
+  });
+  return out;
+}
+
+function axisInterpret(axis,score){
+  const meta=AXES[axis];
+  if(score<=20) return `muy cerca de “${meta.low}”`;
+  if(score<40) return `inclinado hacia “${meta.low}”`;
+  if(score<=60) return `mixto / contextual`;
+  if(score<80) return `inclinado hacia “${meta.high}”`;
+  return `muy cerca de “${meta.high}”`;
+}
+
+function renderResults(){
+  renderAxisList();
+  renderSummary();
+  renderNolan();
+  renderRadarControls();
+  renderRadar();
+  renderActors();
+  renderMethod();
+  renderShareTab();
+  renderCompareTab();
+}
+
+function renderAxisList(){
+  $("#axisList").innerHTML = Object.entries(AXES).map(([key,a])=>{
+    const s=results[key];
+    return `
+      <div class="axis-row">
+        <div class="axis-labels"><span>${a.low}</span><strong>${a.name} <span class="score-badge">${Math.round(s)}</span></strong><span>${a.high}</span></div>
+        <div class="track"><div class="user-marker" style="left:${s}%"></div></div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderSummary(){
+  const deviations = Object.keys(results).map(k=>({k,d:Math.abs(results[k]-50),s:results[k]})).sort((a,b)=>b.d-a.d);
+  const top=deviations.slice(0,3);
+  const phrases=top.map(x=>{
+    const a=AXES[x.k];
+    const side=x.s>=50?a.high:a.low;
+    return `<strong>${a.name}</strong> hacia <strong>${side}</strong> (${Math.round(x.s)})`;
+  });
+  $("#profileSummary").innerHTML = `Tus rasgos más marcados aparecen en ${phrases[0]}, ${phrases[1]} y ${phrases[2]}. El resto del perfil puede ser más mixto o depender del contexto.`;
+
+  // Referentes: similitud dentro del modelo (js/similarity.js), top 3 en #topReferents.
+  renderTopReferents();
+}
+
+function renderNolan(){
+  const W=760,H=560,pad=62;
+  const x=v=>pad+(v/100)*(W-pad*2);
+  const y=v=>H-pad-(v/100)*(H-pad*2);
+  const colors=["#8ab4ff","#b69cff","#85d7b6","#f4cc73","#ff9a9a","#a7d8ff","#d2a8ff","#9be3c8","#ffd897","#f4a7a7","#c8d2ff","#a9e6df","#e4b3ff","#ffe3a6","#a5bad7","#d0d7e5"];
+  let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Mapa Nolan">
+    <rect x="${pad}" y="${pad}" width="${W-pad*2}" height="${H-pad*2}" rx="16" fill="#0d1119" stroke="#2b3447"/>
+    <line x1="${x(50)}" y1="${pad}" x2="${x(50)}" y2="${H-pad}" stroke="#354055"/>
+    <line x1="${pad}" y1="${y(50)}" x2="${W-pad}" y2="${y(50)}" stroke="#354055"/>
+    <text x="${pad}" y="${H-20}" fill="#8f9aab" font-size="12">Más Estado</text>
+    <text x="${W-pad}" y="${H-20}" text-anchor="end" fill="#8f9aab" font-size="12">Más mercado</text>
+    <text x="18" y="${H-pad}" fill="#8f9aab" font-size="12">Control social</text>
+    <text x="18" y="${pad}" fill="#8f9aab" font-size="12">Libertad personal</text>`;
+
+  ACTORS.forEach((a,i)=>{
+    const sx=a.scores.econ, sy=a.scores.personal;
+    if(sx==null||sy==null) return;
+    const c=colors[i%colors.length];
+    svg += `<g><circle cx="${x(sx)}" cy="${y(sy)}" r="6" fill="${c}" opacity=".9"/><text x="${x(sx)+9}" y="${y(sy)-8}" fill="#b7c0cf" font-size="10">${escapeHtml(a.name)}</text></g>`;
+  });
+  svg += `<g><circle cx="${x(results.econ)}" cy="${y(results.personal)}" r="10" fill="#fff" stroke="#8ab4ff" stroke-width="5"/><text x="${x(results.econ)+13}" y="${y(results.personal)+4}" fill="#fff" font-weight="800" font-size="13">Vos</text></g></svg>`;
+  $("#nolanChart").innerHTML=svg;
+  $("#nolanLegend").innerHTML=`<span class="legend-item"><i class="dot" style="background:#fff"></i>Tu resultado</span><span class="legend-item"><i class="dot" style="background:#9aa7bd"></i>Referentes aproximados</span>`;
+}
+
+function renderRadarControls(){
+  const pool=ACTORS.filter(a=>["milei","cfk","trump","xi","musk","thiel","harari","kurzweil","altman","rebord"].includes(a.id));
+  $("#radarControls").innerHTML=pool.map(a=>`<button class="actor-chip ${radarSelected.includes(a.id)?"on":""}" data-id="${a.id}">${a.name}</button>`).join("");
+  $$("#radarControls .actor-chip").forEach(btn=>btn.onclick=()=>{
+    const id=btn.dataset.id;
+    if(radarSelected.includes(id)) radarSelected=radarSelected.filter(x=>x!==id);
+    else{
+      if(radarSelected.length>=3) radarSelected.shift();
+      radarSelected.push(id);
+    }
+    renderRadarControls(); renderRadar();
+  });
+}
+
+function renderRadar(){
+  const W=720,H=590,cx=W/2,cy=H/2+5,R=210;
+  const keys=Object.keys(AXES);
+  const angle=i => -Math.PI/2 + i*(2*Math.PI/keys.length);
+  const pt=(i,val)=>{
+    const r=R*(val/100), a=angle(i);
+    return [cx+Math.cos(a)*r, cy+Math.sin(a)*r];
+  };
+  let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Radar 8D">`;
+  [20,40,60,80,100].forEach(level=>{
+    const poly=keys.map((k,i)=>pt(i,level).join(",")).join(" ");
+    svg+=`<polygon points="${poly}" fill="none" stroke="${level===100?'#39465c':'#273145'}" stroke-width="1"/>`;
+  });
+  keys.forEach((k,i)=>{
+    const [x2,y2]=pt(i,100);
+    svg+=`<line x1="${cx}" y1="${cy}" x2="${x2}" y2="${y2}" stroke="#273145"/>`;
+    const [lx,ly]=pt(i,113);
+    svg+=`<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" fill="#aab4c5" font-size="11">${AXES[k].short}</text>`;
+  });
+
+  const userPoly=keys.map((k,i)=>pt(i,results[k]).join(",")).join(" ");
+  svg+=`<polygon points="${userPoly}" fill="rgba(138,180,255,.12)" stroke="#8ab4ff" stroke-width="3"/>`;
+
+  const palette=["#b69cff","#85d7b6","#f4cc73"];
+  radarSelected.forEach((id,idx)=>{
+    const a=ACTORS.find(x=>x.id===id); if(!a)return;
+    // nulls se dibujan en 50 para no inventar, pero con línea discontinua y aviso en leyenda
+    const poly=keys.map((k,i)=>pt(i,a.scores[k]==null?50:a.scores[k]).join(",")).join(" ");
+    svg+=`<polygon points="${poly}" fill="none" stroke="${palette[idx]}" stroke-width="2" stroke-dasharray="${Object.values(a.scores).some(v=>v==null)?'6 5':'0'}" opacity=".9"/>`;
+  });
+  svg+=`</svg>`;
+  $("#radarChart").innerHTML=svg;
+  $("#radarLegend").innerHTML=`<span class="legend-item"><i class="dot" style="background:#8ab4ff"></i>Vos</span>`+
+    radarSelected.map((id,idx)=>{
+      const a=ACTORS.find(x=>x.id===id);
+      const hasNull=Object.values(a.scores).some(v=>v==null);
+      return `<span class="legend-item"><i class="dot" style="background:${palette[idx]}"></i>${a.name}${hasNull?" · faltan ejes":""}</span>`;
+    }).join("");
+}
+
+function renderActors(){
+  const list=ACTORS.filter(a=>actorFilter==="all" || a.tags.includes(actorFilter));
+  // Orden por similitud (desc, empates → más ejes); los no comparables (<3 ejes) van al final.
+  const ranked=rankActors(results,list).map(r=>({a:r.actor,sim:r}))
+    .concat(list.filter(a=>!computeSimilarity(results,a)).map(a=>({a,sim:null})));
+  $("#actorGrid").innerHTML=ranked.map(({a,sim})=>{
+    const coverage=Object.values(a.scores).filter(v=>v!==null).length;
+    return `<div class="actor-card" data-id="${a.id}">
+      <div class="actor-top">
+        <div class="avatar">${a.initials}</div>
+        <div><div class="actor-name">${a.name}</div><div class="actor-meta">${a.tags.includes("arg")?"Argentina":a.tags.includes("tech")?"Tecnología / ideas":"Global"} · ${coverage}/8 ejes</div></div>
+        ${sim?`<div class="actor-sim" title="${SIMILARITY_LABEL}">${sim.similarity}%</div>`:""}
+      </div>
+      <div class="actor-desc">${a.desc}</div>
+      <div class="confidence"><i></i>Confianza ${a.confidence} · ${sim?`similitud en el modelo ${sim.similarity}% (${sim.n}/8 ejes)`:"sin ejes suficientes para comparar"}</div>
+    </div>`;
+  }).join("");
+
+  $$("#actorGrid .actor-card").forEach(card=>card.onclick=()=>{
+    const id=card.dataset.id;
+    if(!radarSelected.includes(id)){
+      if(radarSelected.length>=3) radarSelected.shift();
+      radarSelected.push(id);
+    }
+    activateTab("radar");
+    renderRadarControls(); renderRadar();
+  });
+}
+
+function renderMethod(){
+  $("#methodContent").innerHTML=`
+    <details open>
+      <summary>Cómo se calcula tu puntaje</summary>
+      <p>Cada respuesta va de 1 a 5. Se transforma a una escala de −1 a +1, se invierten las preguntas redactadas en sentido contrario y se promedian las seis preguntas de cada dimensión. El resultado final se normaliza a 0–100.</p>
+      <p>50 no significa “centrista” en sentido partidario: sólo que, dentro de ese eje concreto, tus respuestas quedaron equilibradas o fueron muy dependientes del contexto.</p>
+    </details>
+    <details open>
+      <summary>Cómo se calculan los referentes</summary>
+      <p>Las figuras públicas no respondieron este cuestionario. Sus coordenadas son una <strong>estimación editorial</strong> construida a partir de discursos, políticas y posiciones públicas. No deben tratarse como datos psicométricos.</p>
+      <p>Cuando no hay evidencia razonable sobre un eje —por ejemplo, libertad morfológica— se usa <code>null</code>. Ese eje <strong>nunca</strong> se compara. Si un referente tiene menos de 3 ejes con puntaje, queda fuera del ranking.</p>
+    </details>
+    <details open>
+      <summary>Cómo se calcula la similitud con referentes</summary>
+      <p>La <strong>${SIMILARITY_LABEL}</strong> se arma así, en palabras simples:</p>
+      <ul>
+        <li>Se toman sólo los ejes donde el referente tiene puntaje (n ejes comparables).</li>
+        <li>En cada uno se mide cuántos puntos te separan y se calcula una distancia promedio que pesa más las diferencias grandes (raíz del promedio de los cuadrados).</li>
+        <li>La base es 100 menos esa distancia (entre 0 y 100).</li>
+        <li>Se ajusta por cobertura: con los 8 ejes cuenta completa; con menos ejes baja un poco (0,55 + 0,45 × n/8), porque hay menos información.</li>
+        <li>Se ajusta por la confianza editorial del perfil: alta o media no cambian; media-baja multiplica por 0,94 y baja por 0,88.</li>
+      </ul>
+      <p>El resultado es un porcentaje entero. Es una aproximación dentro de este modelo: no es una medición científica ni indica afinidad política, moral o electoral.</p>
+    </details>
+    <details id="privacyMethod">
+      <summary>Privacidad: qué se guarda y qué se comparte</summary>
+      ${privacyHtml()}
+    </details>
+    <details>
+      <summary>Limitaciones importantes</summary>
+      <ul>
+        <li>Las ideologías reales no son perfectamente lineales ni ortogonales.</li>
+        <li>Una misma persona puede cambiar de posición con el tiempo o actuar distinto de su retórica.</li>
+        <li>Los ejes de transhumanismo, biotecnología y gobernanza algorítmica tienen menos datos públicos para muchos políticos.</li>
+        <li>El test mide tus respuestas a estas 48 formulaciones; cambiar las preguntas puede cambiar el resultado.</li>
+        <li>La cercanía matemática no implica afinidad moral, partidaria ni electoral.</li>
+      </ul>
+    </details>
+    <details>
+      <summary>Fuentes iniciales de calibración</summary>
+      <div class="source-list">
+        ${SOURCES.map(s=>`<div class="source"><div>${s.label}</div><a href="${s.url}" target="_blank" rel="noopener">${s.url}</a></div>`).join("")}
+      </div>
+    </details>
+    <details>
+      <summary>Cómo editar los perfiles</summary>
+      <p>En el código buscá la constante <code>ACTORS</code>. Cada perfil tiene ocho valores de 0 a 100. Usá <code>null</code> cuando no haya evidencia suficiente. Así podés revisar los perfiles a medida que agregues mejores fuentes.</p>
+    </details>
+  `;
+}
+
+function activateTab(name){
+  $$(".tab").forEach(t=>t.classList.toggle("active",t.dataset.tab===name));
+  $$(".tabpane").forEach(p=>p.classList.toggle("active",p.id===`tab-${name}`));
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+}
+
+$("#startBtn").onclick=()=>{ loadProgress(); renderQuestion(); showScreen("quizScreen"); };
+$("#prevBtn").onclick=()=>{ if(current>0){current--;saveProgress();renderQuestion();} };
+$("#exitBtn").onclick=()=>{ saveProgress(); showScreen("homeScreen"); };
+$("#retakeBtn").onclick=()=>{ answers=Array(QUESTIONS.length).fill(null);current=0;results=null;clearProgress();renderQuestion();showScreen("quizScreen"); };
+$("#aboutBtn").onclick=()=>{
+  if(results){activateTab("method");showScreen("resultsScreen");}
+  else{
+    alert("La metodología completa aparece al finalizar. El test usa 48 ítems, 8 ejes y perfiles públicos aproximados con fuentes y valores nulos cuando falta evidencia.");
+  }
+};
+$$(".tab").forEach(t=>t.onclick=()=>activateTab(t.dataset.tab));
+$$(".filter").forEach(f=>f.onclick=()=>{
+  actorFilter=f.dataset.filter;
+  $$(".filter").forEach(x=>x.classList.toggle("active",x===f));
+  renderActors();
+});
+document.addEventListener("keydown",e=>{
+  if($("#quizScreen").classList.contains("active") && ["1","2","3","4","5"].includes(e.key)) choose(+e.key);
+});
+
+// El último resultado (sólo los 8 puntajes) se guarda en localStorage desde js/app-ext.js.
+</script>
+<script src="js/similarity.js"></script>
+<script src="js/share.js"></script>
+<script src="js/carnet.js"></script>
+<script src="js/compare.js"></script>
+<script src="js/app-ext.js"></script>
+</body>
+</html>
