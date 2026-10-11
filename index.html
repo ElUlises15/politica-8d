@@ -216,12 +216,22 @@
           </p>
           <div class="pillrow">
             <span class="pill">48 preguntas</span>
+            <span class="pill">Versión rápida de 10</span>
             <span class="pill">8 dimensiones</span>
             <span class="pill">Mapa Nolan</span>
             <span class="pill">Comparación con referentes</span>
             <span class="pill">Sin registro</span>
           </div>
-          <button class="primary" id="startBtn">Empezar el test</button>
+          <div class="start-options" role="group" aria-label="Elegí cómo hacer el test">
+            <button type="button" class="start-opt primary" id="startBtn">
+              <span class="start-opt-title" id="startFullTitle">Test completo (48 preguntas)</span>
+              <span class="start-opt-sub" id="startFullSub">~8–10 min · la medición más precisa</span>
+            </button>
+            <button type="button" class="start-opt ghost" id="startQuickBtn">
+              <span class="start-opt-title" id="startQuickTitle">Versión rápida (10 preguntas, ~2 min)</span>
+              <span class="start-opt-sub" id="startQuickSub">Cubre los 8 ejes · menor precisión</span>
+            </button>
+          </div>
         </div>
 
         <aside class="card hero-side">
@@ -271,6 +281,7 @@
     <section id="resultsScreen" class="screen">
       <div class="results-head">
         <div>
+          <div class="mode-badge hidden" id="modeBadge">Versión rápida · menor precisión</div>
           <h2>Tu mapa político</h2>
           <p>
             Tus resultados se muestran como tendencias, no como etiquetas rígidas. Usá las referencias públicas
@@ -281,6 +292,14 @@
           <button class="primary" id="btnShareResult">Compartir mi resultado</button>
           <button class="ghost" id="retakeBtn">Rehacer test</button>
         </div>
+      </div>
+
+      <div class="quick-cta hidden" id="quickCta" role="note">
+        <div>
+          <strong>Hiciste la versión rápida.</strong>
+          <span id="quickCtaText">Respondiste 10 de 48 preguntas (al menos una por eje). Los puntajes usan la misma escala 0–100 que el test completo, pero con menos preguntas son menos precisos.</span>
+        </div>
+        <button type="button" class="primary" id="btnQuickToFull">Hacer el test completo para más precisión</button>
       </div>
 
       <div class="tabs">
@@ -403,6 +422,7 @@
         <div class="card section-card">
           <h3>Vos vs tu amigo</h3>
           <div class="sub">Comparación eje por eje entre tu resultado y el que te compartieron. Sólo se usan los 8 puntajes agregados.</div>
+          <div class="callout precision-note hidden" id="comparePrecision" role="note"></div>
           <div class="legend compare-legend">
             <span class="legend-item"><i class="dot" style="background:#8ab4ff"></i>Vos</span>
             <span class="legend-item"><i class="dot" style="background:#85d7b6"></i>Tu amigo</span>
@@ -433,8 +453,10 @@
         <div>
           <div class="eyebrow">Enlace compartido</div>
           <h2>Resultado compartido de Política 8D</h2>
+          <div class="mode-badge hidden" id="sharedModeBadge">Versión rápida · menor precisión</div>
           <p>Este enlace contiene únicamente las puntuaciones que decidiste compartir.
             No incluye respuestas individuales, nombre ni datos personales.</p>
+          <p class="hidden" id="sharedModeNote">Este resultado se hizo con la versión rápida (10 preguntas): es orientativo y menos preciso que el test completo.</p>
         </div>
       </div>
       <div class="grid2">
@@ -451,6 +473,7 @@
       </div>
       <div class="share-actions shared-actions">
         <button type="button" class="primary" id="btnCompareStart">Hacer mi test y comparar</button>
+        <button type="button" class="ghost" id="btnCompareStartQuick">Versión rápida (10 preguntas) y comparar</button>
         <button type="button" class="ghost hidden" id="btnCompareNow">Comparar con mi último resultado</button>
         <button type="button" class="ghost" id="btnSharedHome">Ir al inicio</button>
       </div>
@@ -611,8 +634,40 @@ const CHOICES = [
   [5,"Totalmente de acuerdo"]
 ];
 
-let current = 0;
-let answers = Array(QUESTIONS.length).fill(null);
+/*
+ * VERSIÓN RÁPIDA: 10 preguntas fijas (índices 0-based dentro de QUESTIONS).
+ * Criterio:
+ *  - Al menos una pregunta por cada uno de los 8 ejes (el ítem más representativo del polo del eje).
+ *  - Las 2 preguntas extra van a los ejes que más discriminan entre los perfiles de referentes:
+ *    mayor desvío estándar entre los ACTORS con puntaje, contando sólo ejes puntuados en ≥10 referentes.
+ *    Economía (σ≈31, 15 referentes) y Tecnología (σ≈22, 14 referentes). En esos dos ejes se usa un
+ *    par de ítems con sentido opuesto (+/−) para compensar la tendencia a responder "de acuerdo".
+ *  - En total quedan 5 ítems a favor y 5 en contra del polo "alto" (balance de redacción).
+ *  - Todos los ítems pesan lo mismo (±1), así que no hay "ítems de mayor peso" para priorizar.
+ * La selección es fija y determinística (sin azar) para que los resultados entre amigos sean comparables.
+ * Si cambia el banco de preguntas, revisá estos índices.
+ */
+const QUICK_QUESTION_IDS = [
+  1,  // econ (−) Estado que garantiza servicios esenciales aunque suban los impuestos
+  2,  // econ (+) mercados competitivos vs. planificación   [extra: eje más discriminante]
+  8,  // personal (+) libertad de expresión aun para opiniones ofensivas
+  13, // authority (−) gobierno fuerte que limita libertades en crisis
+  20, // global (+) inmigración relativamente abierta
+  24, // trans (+) modificarse genéticamente para mejorar capacidades
+  33, // morph (−) mejoras genéticas → castas biológicas, restringir
+  36, // technoGov (−) decisiones en manos humanas aunque una IA decida mejor
+  42, // techno (+) innovación permitida por defecto
+  43  // techno (−) demostrar seguridad antes de difundir     [extra: 2.º eje más discriminante]
+];
+const FULL_ORDER = QUESTIONS.map((_,i)=>i);
+const QUICK_LABEL = "Versión rápida · menor precisión";
+
+let quizMode = "full";    // modo del test en curso: "full" | "quick"
+let resultMode = "full";  // modo con el que se calculó `results`
+let skipAnswered = false; // test completo que arrancó con las respuestas de la versión rápida
+let lastQuickAnswers = null;
+let current = 0;          // posición dentro del orden del modo actual
+let answers = Array(QUESTIONS.length).fill(null); // indexado por pregunta (QUESTIONS)
 let results = null;
 let radarSelected = ["milei","musk","harari"];
 let actorFilter = "all";
@@ -626,32 +681,74 @@ function showScreen(id){
   window.scrollTo({top:0,behavior:"smooth"});
 }
 
+function quizOrder(){ return quizMode==="quick" ? QUICK_QUESTION_IDS : FULL_ORDER; }
+// El test completo conserva la clave histórica; la versión rápida usa una propia.
+function progressKey(mode){ return (mode||quizMode)==="quick" ? "politica8d-progress-quick" : "politica8d-progress"; }
+
 function loadProgress(){
   try{
-    const saved = JSON.parse(localStorage.getItem("politica8d-progress") || "null");
+    const saved = JSON.parse(localStorage.getItem(progressKey()) || "null");
     if(saved && Array.isArray(saved.answers) && saved.answers.length===QUESTIONS.length){
-      answers = saved.answers;
-      current = Math.min(Math.max(saved.current||0,0),QUESTIONS.length-1);
+      const order = quizOrder();
+      answers = saved.answers.map((v,i)=>(Number.isInteger(v)&&v>=1&&v<=5&&order.includes(i))?v:null);
+      current = Math.min(Math.max(saved.current||0,0),order.length-1);
+      skipAnswered = quizMode==="full" && !!saved.skip;
     }
   }catch(e){}
 }
 function saveProgress(){
-  localStorage.setItem("politica8d-progress", JSON.stringify({answers,current}));
+  const data = {answers,current};
+  if(skipAnswered) data.skip = true;
+  localStorage.setItem(progressKey(), JSON.stringify(data));
 }
-function clearProgress(){ localStorage.removeItem("politica8d-progress"); }
+function clearProgress(){ localStorage.removeItem(progressKey()); }
+function hasProgress(mode){
+  try{
+    const saved = JSON.parse(localStorage.getItem(progressKey(mode)) || "null");
+    return !!(saved && Array.isArray(saved.answers) && saved.answers.some(v=>v!==null));
+  }catch(e){ return false; }
+}
+
+// Arranca un test en el modo pedido, retomando el progreso guardado de ese modo.
+// opts.seed: respuestas previas (p. ej. de la versión rápida) para no repetirlas en el completo.
+function startTest(mode, opts){
+  opts = opts || {};
+  quizMode = mode==="quick" ? "quick" : "full";
+  answers = Array(QUESTIONS.length).fill(null); current = 0; skipAnswered = false;
+  if(opts.fresh) clearProgress(); else loadProgress();
+  if(opts.seed && quizMode==="full"){
+    opts.seed.forEach((v,i)=>{ if(v!=null && answers[i]===null) answers[i]=v; });
+    skipAnswered = true;
+    const first = answers.findIndex(v=>v===null);
+    current = first<0 ? 0 : first;
+    saveProgress();
+  }
+  renderQuestion();
+  showScreen("quizScreen");
+}
+
+function updateStartOptions(){
+  $("#startFullTitle").textContent = `Test completo (${QUESTIONS.length} preguntas)`;
+  $("#startQuickTitle").textContent = `Versión rápida (${QUICK_QUESTION_IDS.length} preguntas, ~2 min)`;
+  $("#startFullSub").textContent = hasProgress("full") ? "Tenés uno en curso: seguís donde lo dejaste" : "~8–10 min · la medición más precisa";
+  $("#startQuickSub").textContent = hasProgress("quick") ? "Tenés una en curso: seguís donde la dejaste" : "Cubre los 8 ejes · menor precisión";
+}
 
 function renderQuestion(){
-  const [axis,,text] = QUESTIONS[current];
+  const order = quizOrder(), total = order.length, qi = order[current];
+  const [axis,,text] = QUESTIONS[qi];
+  const quick = quizMode==="quick";
+  $("#quizScreen").dataset.mode = quizMode;
   $("#questionAxis").textContent = AXES[axis].name;
-  $("#questionNumber").textContent = `Pregunta ${current+1} de ${QUESTIONS.length}`;
+  $("#questionNumber").textContent = `Pregunta ${current+1} de ${total}` + (quick ? " · Versión rápida" : "");
   $("#questionText").textContent = text;
-  $("#progressLabel").textContent = `Pregunta ${current+1} de ${QUESTIONS.length}`;
-  const pct = Math.round(((current+1)/QUESTIONS.length)*100);
+  $("#progressLabel").textContent = `Pregunta ${current+1} de ${total}` + (quick ? " · Rápida" : "");
+  const pct = Math.round(((current+1)/total)*100);
   $("#progressPct").textContent = pct+"%";
   $("#progressBar").style.width = pct+"%";
 
   $("#choices").innerHTML = CHOICES.map(([v,label]) => `
-    <button class="choice ${answers[current]===v?"selected":""}" data-value="${v}">
+    <button class="choice ${answers[qi]===v?"selected":""}" data-value="${v}">
       <span class="choice-num">${v}</span><span>${label}</span>
     </button>
   `).join("");
@@ -662,10 +759,17 @@ function renderQuestion(){
 }
 
 function choose(v){
-  answers[current]=v;
+  const order = quizOrder();
+  answers[order[current]]=v;
   saveProgress();
-  if(current < QUESTIONS.length-1){
-    current++;
+  let next = current+1;
+  if(skipAnswered){
+    // test completo sembrado con la versión rápida: se saltean las ya respondidas
+    while(next<order.length && answers[order[next]]!==null) next++;
+    if(next>=order.length){ const miss = order.findIndex(i=>answers[i]===null); if(miss>=0) next = miss; }
+  }
+  if(next < order.length){
+    current = next;
     renderQuestion();
   }else{
     finishTest();
@@ -673,28 +777,36 @@ function choose(v){
 }
 
 function finishTest(){
-  if(answers.some(v=>v===null)){
-    current = answers.findIndex(v=>v===null);
+  const order = quizOrder();
+  const missing = order.findIndex(i=>answers[i]===null);
+  if(missing>=0){
+    current = missing;
     renderQuestion(); return;
   }
   results = calculateResults();
+  resultMode = quizMode;
+  lastQuickAnswers = quizMode==="quick" ? answers.slice() : null;
   clearProgress();
+  skipAnswered = false;
   renderResults();
   onResultsReady();
   showScreen("resultsScreen");
 }
 
+// Promedia, por eje, sólo las preguntas respondidas (las null se ignoran).
+// En el test completo están todas, así que el resultado es idéntico al cálculo original;
+// en la versión rápida (1–2 ítems por eje) la escala 0–100 queda comparable.
 function calculateResults(){
   const out={};
   Object.keys(AXES).forEach(axis=>{
     const vals=[];
     QUESTIONS.forEach((q,i)=>{
-      if(q[0]===axis){
+      if(q[0]===axis && answers[i]!=null){
         const centered=(answers[i]-3)/2; // -1..1
         vals.push(centered*q[1]);
       }
     });
-    const avg=vals.reduce((a,b)=>a+b,0)/vals.length;
+    const avg=vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
     out[axis]=Math.round((50+avg*50)*10)/10;
   });
   return out;
@@ -709,7 +821,15 @@ function axisInterpret(axis,score){
   return `muy cerca de “${meta.high}”`;
 }
 
+function renderModeMarks(){
+  const quick = resultMode==="quick";
+  $("#modeBadge").classList.toggle("hidden", !quick);
+  $("#quickCta").classList.toggle("hidden", !quick);
+  $("#quickCtaText").textContent = `Respondiste ${QUICK_QUESTION_IDS.length} de ${QUESTIONS.length} preguntas (al menos una por eje). Los puntajes usan la misma escala 0–100 que el test completo, pero con menos preguntas son menos precisos.`;
+}
+
 function renderResults(){
+  renderModeMarks();
   renderAxisList();
   renderSummary();
   renderNolan();
@@ -862,6 +982,12 @@ function renderMethod(){
       <p>Cada respuesta va de 1 a 5. Se transforma a una escala de −1 a +1, se invierten las preguntas redactadas en sentido contrario y se promedian las seis preguntas de cada dimensión. El resultado final se normaliza a 0–100.</p>
       <p>50 no significa “centrista” en sentido partidario: sólo que, dentro de ese eje concreto, tus respuestas quedaron equilibradas o fueron muy dependientes del contexto.</p>
     </details>
+    <details ${resultMode==="quick"?"open":""} id="quickMethod">
+      <summary>Versión rápida (${QUICK_QUESTION_IDS.length} preguntas)</summary>
+      <p>La versión rápida usa siempre las mismas ${QUICK_QUESTION_IDS.length} preguntas del banco, así los resultados entre amigos son comparables. Hay al menos una por eje; las dos extra van a Economía y Tecnología, los ejes donde más se separan los perfiles de referentes.</p>
+      <p>El cálculo es el mismo, pero cada eje se promedia sólo con las preguntas respondidas (una o dos), así la escala 0–100 coincide con la del test completo. Con tan pocas preguntas el resultado es <strong>orientativo y menos preciso</strong>: una sola respuesta mueve mucho el puntaje.</p>
+      <ul>${QUICK_QUESTION_IDS.map(i=>`<li><strong>${AXES[QUESTIONS[i][0]].name}:</strong> ${escapeHtml(QUESTIONS[i][2])}</li>`).join("")}</ul>
+    </details>
     <details open>
       <summary>Cómo se calculan los referentes</summary>
       <p>Las figuras públicas no respondieron este cuestionario. Sus coordenadas son una <strong>estimación editorial</strong> construida a partir de discursos, políticas y posiciones públicas. No deben tratarse como datos psicométricos.</p>
@@ -915,14 +1041,16 @@ function escapeHtml(s){
   return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 }
 
-$("#startBtn").onclick=()=>{ loadProgress(); renderQuestion(); showScreen("quizScreen"); };
+$("#startBtn").onclick=()=>startTest("full");
+$("#startQuickBtn").onclick=()=>startTest("quick");
+$("#btnQuickToFull").onclick=()=>startTest("full",{seed:lastQuickAnswers});
 $("#prevBtn").onclick=()=>{ if(current>0){current--;saveProgress();renderQuestion();} };
-$("#exitBtn").onclick=()=>{ saveProgress(); showScreen("homeScreen"); };
-$("#retakeBtn").onclick=()=>{ answers=Array(QUESTIONS.length).fill(null);current=0;results=null;clearProgress();renderQuestion();showScreen("quizScreen"); };
+$("#exitBtn").onclick=()=>{ saveProgress(); updateStartOptions(); showScreen("homeScreen"); };
+$("#retakeBtn").onclick=()=>{ results=null; startTest(resultMode,{fresh:true}); };
 $("#aboutBtn").onclick=()=>{
   if(results){activateTab("method");showScreen("resultsScreen");}
   else{
-    alert("La metodología completa aparece al finalizar. El test usa 48 ítems, 8 ejes y perfiles públicos aproximados con fuentes y valores nulos cuando falta evidencia.");
+    alert("La metodología completa aparece al finalizar. El test completo usa 48 ítems y la versión rápida 10 (al menos uno por eje); hay 8 ejes y perfiles públicos aproximados con fuentes y valores nulos cuando falta evidencia.");
   }
 };
 $$(".tab").forEach(t=>t.onclick=()=>activateTab(t.dataset.tab));
@@ -931,6 +1059,7 @@ $$(".filter").forEach(f=>f.onclick=()=>{
   $$(".filter").forEach(x=>x.classList.toggle("active",x===f));
   renderActors();
 });
+updateStartOptions();
 document.addEventListener("keydown",e=>{
   if($("#quizScreen").classList.contains("active") && ["1","2","3","4","5"].includes(e.key)) choose(+e.key);
 });

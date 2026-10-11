@@ -47,7 +47,7 @@ function carnetFilename(){
 
 function updateCarnet(){
   if(!results) return;
-  const canvas = renderCarnet(carnetState.template, carnetState.format, {canvas:$("#carnetCanvas"), alias:carnetState.alias});
+  const canvas = renderCarnet(carnetState.template, carnetState.format, {canvas:$("#carnetCanvas"), alias:carnetState.alias, mode:resultMode});
   const v = ++carnetVersion;
   carnetBlob = null;
   canvasToBlob(canvas).then(b => { if(v === carnetVersion) carnetBlob = b; });
@@ -63,14 +63,14 @@ function syncSelectors(){
 }
 
 function renderShareTab(){
-  $("#shareText").value = buildShareText(results);
+  $("#shareText").value = buildShareText(results, resultMode);
   syncSelectors();
   scheduleCarnet(0);
 }
 
 function currentShareUrl(){
   const top = rankActors(results)[0];
-  return encodeShare(results, top && top.actor.id);
+  return encodeShare(results, top && top.actor.id, resultMode);
 }
 
 function copyWithToast(text, okMsg){
@@ -78,7 +78,7 @@ function copyWithToast(text, okMsg){
 }
 
 async function shareResult(){
-  const text = buildShareText(results);
+  const text = buildShareText(results, resultMode);
   const url = currentShareUrl();
   const blob = carnetBlob || await canvasToBlob($("#carnetCanvas"));
   try{
@@ -133,7 +133,7 @@ function initCarnetControls(){
   $("#btnDownloadCompare").onclick = async () => {
     const f = loadFriend();
     if(!f || !results) return;
-    const blob = await canvasToBlob(renderCompareCard(results, f.scores));
+    const blob = await canvasToBlob(renderCompareCard(results, f.scores, null, {userMode:resultMode, friendMode:f.mode}));
     if(!blob){ showToast("No se pudo generar la imagen en este navegador."); return; }
     downloadBlob(blob, "politica-8d-comparacion-1080x1350.png");
     showToast("Comparación descargada.");
@@ -183,16 +183,15 @@ function updateFriendBanner(){
 }
 
 function initSharedControls(){
-  $("#btnCompareStart").onclick = () => {
+  const compareStart = mode => {
     if(!pendingShared) return;
     saveFriend(pendingShared);
     leaveSharedView();
-    // si en memoria quedó un test terminado, se arranca uno nuevo
-    if(!answers.some(v => v === null)){ answers = Array(QUESTIONS.length).fill(null); current = 0; }
-    loadProgress();
-    renderQuestion();
-    showScreen("quizScreen");
+    // startTest arranca de cero (o retoma el progreso guardado de ese modo)
+    startTest(mode);
   };
+  $("#btnCompareStart").onclick = () => compareStart("full");
+  $("#btnCompareStartQuick").onclick = () => compareStart("quick");
   $("#btnCompareNow").onclick = () => {
     const last = loadLastResult();
     if(!pendingShared || !last) return;
@@ -200,18 +199,19 @@ function initSharedControls(){
     safeSet(sessionStorage, SS_COMPARE_ACTIVE, "1");
     leaveSharedView();
     results = last;
+    resultMode = loadLastMode();
     renderResults();
     activateTab("compare");
     showScreen("resultsScreen");
   };
-  $("#btnSharedHome").onclick = () => { leaveSharedView(); pendingShared = null; showScreen("homeScreen"); };
+  $("#btnSharedHome").onclick = () => { leaveSharedView(); pendingShared = null; updateStartOptions(); showScreen("homeScreen"); };
   $("#btnDiscardFriend").onclick = () => { clearFriend(); updateFriendBanner(); };
   $("#btnHashNoticeClose").onclick = () => { $("#hashNotice").classList.add("hidden"); leaveSharedView(); };
 }
 
 // Llamado por finishTest() después de renderResults().
 function onResultsReady(){
-  saveLastResult(results);
+  saveLastResult(results, resultMode);
   updateFriendBanner();
   if(loadFriend()){
     safeSet(sessionStorage, SS_COMPARE_ACTIVE, "1");
@@ -228,13 +228,27 @@ function setAnswersForTest(values){
      !values.every(v => Number.isInteger(v) && v >= 1 && v <= 5)){
     throw new Error("setAnswersForTest: se esperan 48 valores enteros de 1 a 5");
   }
+  quizMode = "full"; skipAnswered = false;
   answers = values.slice();
   current = QUESTIONS.length - 1;
   finishTest();
   return results;
 }
+// Versión rápida: 10 valores 1–5 en el orden de QUICK_QUESTION_IDS.
+function setQuickAnswersForTest(values){
+  if(!Array.isArray(values) || values.length !== QUICK_QUESTION_IDS.length ||
+     !values.every(v => Number.isInteger(v) && v >= 1 && v <= 5)){
+    throw new Error("setQuickAnswersForTest: se esperan 10 valores enteros de 1 a 5");
+  }
+  quizMode = "quick"; skipAnswered = false;
+  answers = Array(QUESTIONS.length).fill(null);
+  QUICK_QUESTION_IDS.forEach((qi, i) => { answers[qi] = values[i]; });
+  current = QUICK_QUESTION_IDS.length - 1;
+  finishTest();
+  return results;
+}
 
-window.P8D = {computeSimilarity, rankActors, encodeShare, decodeShare, renderCarnet, setAnswersForTest, compareProfiles, renderCompareCard};
+window.P8D = {computeSimilarity, rankActors, encodeShare, decodeShare, renderCarnet, setAnswersForTest, setQuickAnswersForTest, QUICK_QUESTION_IDS, compareProfiles, renderCompareCard};
 
 // ---------- Arranque ----------
 initCarnetControls();
@@ -245,6 +259,7 @@ if(!handleHash()){
   if(friend && last && safeGet(sessionStorage, SS_COMPARE_ACTIVE) === "1"){
     // recarga durante una comparación: se restaura la vista
     results = last;
+    resultMode = loadLastMode();
     renderResults();
     activateTab("compare");
     showScreen("resultsScreen");

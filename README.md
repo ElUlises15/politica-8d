@@ -4,7 +4,7 @@ Prototipo estático de un test político multidimensional.
 
 ## Uso
 1. Abrí `index.html` con cualquier navegador moderno (funciona también desde el disco, `file://`).
-2. Respondé las 48 preguntas (podés usar las teclas 1–5).
+2. Elegí **Test completo** (48 preguntas) o **Versión rápida** (10 preguntas, ~2 min) y respondé (podés usar las teclas 1–5).
 3. Explorá Resumen, Mapa Nolan, Radar 8D, Referentes y Metodología.
 4. En **Carnet y compartir** generá una imagen de tu resultado, copiá el enlace o el resumen.
 5. Si alguien te pasa su enlace, podés hacer tu test y ver **Vos vs tu amigo**.
@@ -30,8 +30,16 @@ miPlantilla: { id:"miPlantilla", label:"Mi plantilla", draw(ctx, data, W, H){ /*
 `data` trae `scores`, `ranked` (similitudes), `top`, `marked` (3 ejes más marcados), `alias` y `url`. El fondo, encabezado y pie los dibuja `renderCarnet`. El selector se genera solo.
 
 ### Hook de pruebas
-`window.P8D = { computeSimilarity, rankActors, encodeShare, decodeShare, renderCarnet, setAnswersForTest, compareProfiles, renderCompareCard }`.
+`window.P8D = { computeSimilarity, rankActors, encodeShare, decodeShare, renderCarnet, setAnswersForTest, setQuickAnswersForTest, QUICK_QUESTION_IDS, compareProfiles, renderCompareCard }`.
 `renderCarnet(templateId, format, opts)` devuelve un canvas (`"portrait"` 1080×1350, `"square"` 1080×1080).
+
+## Versión rápida
+- 10 preguntas fijas del mismo banco, definidas en `QUICK_QUESTION_IDS` (índices de `QUESTIONS`, en `index.html`, con el criterio comentado): al menos una por eje; las 2 extra van a Economía y Tecnología, los ejes con mayor dispersión entre los perfiles de referentes. Balance 5 ítems a favor / 5 en contra del polo alto. Sin azar, para que los resultados entre amigos sean comparables.
+- `calculateResults` promedia por eje sólo las preguntas respondidas, así la escala 0–100 es la misma que en el test completo (en el completo el resultado no cambia).
+- Resultados y carnet llevan la marca "Versión rápida · menor precisión" y se ofrece "Hacer el test completo para más precisión" (reutiliza las 10 respuestas y saltea esas preguntas).
+- El enlace agrega `&m=q`: `#r=1.82.61.55.40.70.66.35.77.milei&m=q`. Sin ese parámetro (incluidos todos los enlaces viejos) se lee como test completo. Comparar rápido vs. completo está permitido, con una nota de precisión.
+- Progreso guardado aparte (`politica8d-progress-quick`); el modo del último resultado va en `politica8d-last-mode`.
+- Hook: `P8D.setQuickAnswersForTest(10 valores 1–5)` y `P8D.QUICK_QUESTION_IDS`.
 
 ## Nota metodológica
 Los puntajes de figuras públicas son estimaciones editoriales, no mediciones científicas. Los ejes sin evidencia suficiente se dejan como `null` y nunca se comparan.
@@ -44,6 +52,9 @@ Los puntajes de figuras públicas son estimaciones editoriales, no mediciones ci
 - Los buscadores tratan la URL con fragmento como la misma página. Cuando se abre un enlace compartido se agrega dinámicamente `<meta name="robots" content="noindex, nofollow">`; es un esfuerzo razonable, no una garantía. La página principal sigue siendo indexable.
 
 ## CHANGELOG
+
+### 2026-10-10 (versión rápida)
+- Inicio con dos opciones: "Test completo (48 preguntas)" y "Versión rápida (10 preguntas, ~2 min)". Ver sección **Versión rápida**.
 
 ### 2026-10-10
 - **Sec. 40–41 · Carnet político:** nueva pestaña "Carnet y compartir" y botón "Compartir mi resultado". Imagen en canvas con encabezado, radar 8D, 8 puntajes con etiquetas suaves ("Inclinación a…", "Mixto / contextual"), referente más parecido, URL del sitio (se omite en `file://`) y aviso "Estimación aproximada · no es una medición científica". Fuentes del sistema; el texto se achica o se trunca para no desbordar.

@@ -5,7 +5,7 @@
 const CARNET_FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
 const CV = {
   bg:"#0b0d12", panel:"#121620", panel2:"#171c28", line:"#2b3447", grid:"#273145", gridOuter:"#39465c",
-  text:"#f3f5f7", soft:"#c3cada", muted:"#9ba6b8", accent:"#8ab4ff", accent2:"#b69cff", friend:"#85d7b6"
+  text:"#f3f5f7", soft:"#c3cada", muted:"#9ba6b8", accent:"#8ab4ff", accent2:"#b69cff", friend:"#85d7b6", warn:"#f4cc73"
 };
 const CARNET_FORMATS = {portrait:{w:1080, h:1350, label:"1080×1350"}, square:{w:1080, h:1080, label:"1080×1080"}};
 const DEFAULT_TEMPLATE = "completo";
@@ -88,12 +88,27 @@ function drawBackground(ctx, W, H){
   fillRoundRect(ctx, 24, 24, W - 48, H - 48, 36, null, "rgba(255,255,255,.08)", 2);
 }
 
+// Pastilla de aviso (p. ej. "Versión rápida · menor precisión") alineada a la derecha. Devuelve su x izquierda.
+function drawBadgeRight(ctx, text, xRight, cy, size){
+  setFont(ctx, size, 800);
+  const w = ctx.measureText(text).width + size * 1.4, h = size * 1.75;
+  fillRoundRect(ctx, xRight - w, cy - h / 2, w, h, h / 2, "rgba(244,204,115,.14)", "rgba(244,204,115,.55)", 2);
+  drawText(ctx, text, xRight - w / 2, cy + 1, {size, weight:800, color:CV.warn, align:"center", baseline:"middle"});
+  return xRight - w;
+}
+
 function drawHeader(ctx, W, H, data, kicker){
   const sq = H <= W;
   fillRoundRect(ctx, PAD, 56, 52, 52, 14, "rgba(138,180,255,.18)", "rgba(255,255,255,.10)", 2);
   drawText(ctx, "8D", PAD + 26, 83, {size:22, weight:800, align:"center", baseline:"middle"});
-  drawText(ctx, kicker || "POLÍTICA 8D", PAD + 70, 92, {size:26, weight:800, color:CV.accent, maxW:W - PAD * 2 - 330});
-  drawText(ctx, "8 ejes · test abierto", W - PAD, 92, {size:22, weight:600, color:CV.muted, align:"right"});
+  let kickerMax = W - PAD * 2 - 330;
+  if(data.badge){
+    const bx = drawBadgeRight(ctx, data.badge, W - PAD, 82, 26);
+    kickerMax = bx - (PAD + 70) - 20;
+  }else{
+    drawText(ctx, "8 ejes · test abierto", W - PAD, 92, {size:22, weight:600, color:CV.muted, align:"right"});
+  }
+  drawText(ctx, kicker || "POLÍTICA 8D", PAD + 70, 92, {size:26, weight:800, color:CV.accent, maxW:kickerMax});
   drawText(ctx, data.title || "Mi Política 8D", PAD, sq ? 172 : 180, {size:sq ? 54 : 62, weight:850, maxW:W - PAD * 2});
   if(data.alias) drawText(ctx, data.alias, PAD, sq ? 214 : 226, {size:32, weight:600, color:CV.soft, maxW:W - PAD * 2, minSize:24});
 }
@@ -331,7 +346,7 @@ function cleanAlias(s){
 /**
  * renderCarnet(templateId, format, opts) → canvas
  * format: "portrait" (1080×1350) | "square" (1080×1080)
- * opts: {alias, scores, canvas}
+ * opts: {alias, scores, canvas, mode}  (mode "quick" → marca "Versión rápida · menor precisión")
  */
 function renderCarnet(templateId, format, opts){
   opts = opts || {};
@@ -343,7 +358,9 @@ function renderCarnet(templateId, format, opts){
   const ctx = canvas.getContext("2d");
   const scores = opts.scores || (typeof results !== "undefined" && results) || scoresToObject(AXIS_KEYS.map(() => 50));
   const ranked = rankActors(scores);
+  const mode = opts.mode || (opts.scores ? "full" : (typeof resultMode !== "undefined" ? resultMode : "full"));
   const data = {
+    mode, badge: mode === "quick" ? QUICK_LABEL : null,
     scores, ranked, top: ranked[0] || null,
     marked: mostMarkedAxes(scores, 3),
     alias: cleanAlias(opts.alias),
@@ -356,5 +373,6 @@ function renderCarnet(templateId, format, opts){
   drawFooter(ctx, W, H, data);
   canvas.dataset.template = tpl.id;
   canvas.dataset.format = fmt;
+  canvas.dataset.mode = mode;
   return canvas;
 }

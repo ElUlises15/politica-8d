@@ -70,6 +70,27 @@ textarea.text-input{resize:vertical;font-size:12px;line-height:1.5;color:#c8d0df
   box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease;z-index:50;text-align:center}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 
+
+/* Inicio: elección de modo (completo / versión rápida) */
+.start-options{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:680px}
+.start-opt{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:5px;text-align:left;
+  padding:16px 18px;border-radius:16px;min-height:78px;width:100%;cursor:pointer}
+.start-opt.ghost{border:1px solid #4e607e;background:var(--panel2)}
+.start-opt.ghost:hover{border-color:var(--accent);background:#1b2230}
+.start-opt-title{font-weight:850;font-size:16px;line-height:1.25}
+.start-opt-sub{font-size:12px;font-weight:600;line-height:1.35;opacity:.85}
+.start-opt.ghost .start-opt-sub{color:var(--muted);opacity:1}
+
+/* Marca de versión rápida */
+.mode-badge{display:inline-flex;align-items:center;gap:6px;margin:0 0 10px;padding:5px 11px;border-radius:999px;font-size:12px;font-weight:800;
+  color:#f4cc73;background:rgba(244,204,115,.10);border:1px solid rgba(244,204,115,.40);letter-spacing:.01em}
+#sharedScreen .mode-badge{margin:0 0 12px}
+.quick-cta{display:flex;gap:16px;align-items:center;justify-content:space-between;margin:0 0 18px;padding:14px 16px;border-radius:16px;
+  background:rgba(244,204,115,.06);border:1px solid rgba(244,204,115,.22);color:#e3d3a6;font-size:13px;line-height:1.55}
+.quick-cta strong{color:#f6dc9b}
+.quick-cta .primary{flex-shrink:0}
+.precision-note{margin:0 0 14px;border-color:rgba(244,204,115,.25);background:rgba(244,204,115,.07);color:#e3d3a6}
+
 @media (max-width:900px){
   .ref-grid{grid-template-columns:1fr}
   .share-layout{grid-template-columns:1fr}
@@ -85,4 +106,9 @@ textarea.text-input{resize:vertical;font-size:12px;line-height:1.5;color:#c8d0df
   .banner{flex-direction:column;align-items:stretch}
   .tabs{gap:6px}
   .tab{padding:9px 11px;font-size:13px}
+  .start-options{grid-template-columns:1fr}
+  .quick-cta{flex-direction:column;align-items:stretch}
+  .quick-cta .primary{width:100%}
+  .hero-copy .lead{font-size:16px;line-height:1.55}
+  .hero-copy .pillrow{margin:18px 0 22px}
 }

@@ -1,5 +1,7 @@
 // Política 8D — enlace reproducible, portapapeles, toast y texto para compartir (secs. 48–50, 53)
 // El enlace sólo lleva: versión + 8 puntajes enteros + id opcional del referente, en el hash.
+// Versión rápida: se agrega "&m=q" al final (#r=1.82.61.55.40.70.66.35.77.milei&m=q).
+// Los enlaces sin ese parámetro (incluidos todos los anteriores) se leen como test completo.
 
 const SHARE_VERSION = "1";
 const SITE_URL = ""; // fallback cuando no hay URL pública (file://): se omite la línea de URL
@@ -7,6 +9,10 @@ const LS_LAST_RESULT = "politica8d-last-result";
 const LS_ALIAS = "politica8d-alias";
 const SS_FRIEND = "politica8d-friend";
 const SS_COMPARE_ACTIVE = "politica8d-compare-active";
+const LS_LAST_MODE = "politica8d-last-mode";
+const SHARE_QUICK_PARAM = "m=q";
+
+function normalizeMode(m){ return m === "quick" ? "quick" : "full"; }
 
 function isFileProtocol(){ return location.protocol === "file:"; }
 
@@ -36,21 +42,26 @@ function scoresToObject(arr){
   return o;
 }
 
-function encodeShare(scores, topId){
+function encodeShare(scores, topId, mode){
   const vals = normalizeScores(scores);
   if(!vals) return null;
   let hash = "r=" + [SHARE_VERSION].concat(vals).join(".");
   if(topId && ACTORS.some(a => a.id === topId)) hash += "." + topId;
+  if(normalizeMode(mode) === "quick") hash += "&" + SHARE_QUICK_PARAM;
   return baseUrl() + "#" + hash;
 }
 
-// Validación estricta. Devuelve {version, scores, topId} o null.
+// Validación estricta. Devuelve {version, scores, topId, mode} o null.
 function decodeShare(hashString){
   if(typeof hashString !== "string") return null;
   let h = hashString.trim();
   const hashPos = h.indexOf("#");
   if(hashPos >= 0) h = h.slice(hashPos + 1);
   if(!h.startsWith("r=")) return null;
+  // parámetros opcionales después de "&" (hoy sólo m=q); los desconocidos se ignoran
+  const segs = h.split("&");
+  h = segs[0];
+  const mode = segs.slice(1).includes(SHARE_QUICK_PARAM) ? "quick" : "full";
   const parts = h.slice(2).split(".");
   if(parts[0] !== SHARE_VERSION) return null;
   if(parts.length !== 9 && parts.length !== 10) return null;
@@ -64,15 +75,16 @@ function decodeShare(hashString){
     try{ id = decodeURIComponent(id); }catch(e){ id = ""; }
     if(ACTORS.some(a => a.id === id)) topId = id; // id desconocido → se ignora
   }
-  return {version: Number(SHARE_VERSION), scores: scoresToObject(vals), topId};
+  return {version: Number(SHARE_VERSION), scores: scoresToObject(vals), topId, mode};
 }
 
 // Texto para compartir, generado con los datos reales.
-function buildShareText(scores){
+function buildShareText(scores, mode){
   const top = rankActors(scores)[0];
   const line = AXIS_KEYS.map(k => `${AXES[k].short}: ${Math.round(scores[k])}`).join(" · ");
-  const url = encodeShare(scores, top && top.actor.id);
-  let txt = "Hice Política 8D.\n" + line + "\n";
+  const quick = normalizeMode(mode) === "quick";
+  const url = encodeShare(scores, top && top.actor.id, mode);
+  let txt = (quick ? "Hice la versión rápida de Política 8D (10 preguntas, menor precisión).\n" : "Hice Política 8D.\n") + line + "\n";
   if(top) txt += `Mi referente más parecido en el modelo fue ${top.actor.name} (${top.similarity}%).\n`;
   txt += "Hacé el test y comparemos: " + url;
   return txt;
@@ -128,10 +140,15 @@ function safeGet(store, key){ try{ return store.getItem(key); }catch(e){ return 
 function safeSet(store, key, val){ try{ store.setItem(key, val); }catch(e){} }
 function safeRemove(store, key){ try{ store.removeItem(key); }catch(e){} }
 
-function saveLastResult(scores){
+// El formato de LS_LAST_RESULT no cambia (8 enteros); el modo va en una clave aparte.
+function saveLastResult(scores, mode){
   const vals = normalizeScores(scores);
-  if(vals) safeSet(localStorage, LS_LAST_RESULT, JSON.stringify(vals));
+  if(!vals) return;
+  safeSet(localStorage, LS_LAST_RESULT, JSON.stringify(vals));
+  if(normalizeMode(mode) === "quick") safeSet(localStorage, LS_LAST_MODE, "quick");
+  else safeRemove(localStorage, LS_LAST_MODE);
 }
+function loadLastMode(){ return normalizeMode(safeGet(localStorage, LS_LAST_MODE)); }
 function loadLastResult(){
   try{
     const vals = JSON.parse(safeGet(localStorage, LS_LAST_RESULT) || "null");
@@ -142,7 +159,7 @@ function loadLastResult(){
 }
 function saveFriend(friend){
   const vals = normalizeScores(friend.scores);
-  if(vals) safeSet(sessionStorage, SS_FRIEND, JSON.stringify({scores: vals, topId: friend.topId || null}));
+  if(vals) safeSet(sessionStorage, SS_FRIEND, JSON.stringify({scores: vals, topId: friend.topId || null, mode: normalizeMode(friend.mode)}));
 }
 function loadFriend(){
   try{
@@ -151,7 +168,7 @@ function loadFriend(){
     const vals = normalizeScores(f.scores);
     if(!vals) return null;
     const topId = ACTORS.some(a => a.id === f.topId) ? f.topId : null;
-    return {scores: scoresToObject(vals), topId};
+    return {scores: scoresToObject(vals), topId, mode: normalizeMode(f.mode)};
   }catch(e){ return null; }
 }
 function clearFriend(){
@@ -176,7 +193,7 @@ function privacyHtml(){
   return `<ul class="privacy-list">
     <li><strong>Sin base de datos ni cuentas:</strong> el sitio es estático y no tiene servidor propio que guarde resultados.</li>
     <li><strong>Sin perfiles públicos:</strong> nada se publica automáticamente; compartir es siempre una decisión tuya.</li>
-    <li><strong>El enlace sólo lleva tus 8 puntajes agregados</strong> (y, opcionalmente, el id del referente más parecido). Nunca incluye tus 48 respuestas, tu nombre ni datos personales.</li>
+    <li><strong>El enlace sólo lleva tus 8 puntajes agregados</strong> (y, opcionalmente, el id del referente más parecido y si fue la versión rápida). Nunca incluye tus 48 respuestas, tu nombre ni datos personales.</li>
     <li><strong>El alias queda en tu dispositivo:</strong> se usa para dibujar la imagen y, como mucho, se recuerda en este navegador (localStorage). No va en ningún enlace.</li>
     <li>El enlace va después del “#”: esa parte no se envía al servidor que aloja la página. Igual, cualquiera que reciba el enlace puede ver esos 8 puntajes.</li>
   </ul>`;

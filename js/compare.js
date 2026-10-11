@@ -44,6 +44,15 @@ function compareProfiles(user, friend){
   return {rows, rms, compatibility, best, worst, bestText, worstText};
 }
 
+// Nota de precisión cuando alguno de los dos resultados viene de la versión rápida ("" si ambos son completos).
+function precisionNote(userMode, friendMode){
+  const u = userMode === "quick", f = friendMode === "quick";
+  if(u && f) return "Los dos hicieron la versión rápida (10 preguntas): la comparación es orientativa y menos precisa.";
+  if(u) return "Vos hiciste la versión rápida (10 preguntas) y tu amigo el test completo. Se pueden comparar porque usan la misma escala 0–100, pero tu resultado es menos preciso.";
+  if(f) return "Tu amigo hizo la versión rápida (10 preguntas) y vos el test completo. Se pueden comparar porque usan la misma escala 0–100, pero su resultado es menos preciso.";
+  return "";
+}
+
 // ---------- Vista compartida ----------
 function renderSharedScreen(shared){
   const s = shared.scores;
@@ -53,6 +62,9 @@ function renderSharedScreen(shared){
       <div class="axis-labels"><span>${AXES[k].low}</span><strong>${AXES[k].name} <span class="score-badge friend">${s[k]}</span></strong><span>${AXES[k].high}</span></div>
       <div class="track"><div class="user-marker friend" style="left:${s[k]}%"></div></div>
     </div>`).join("");
+  const quick = shared.mode === "quick";
+  $("#sharedModeBadge").classList.toggle("hidden", !quick);
+  $("#sharedModeNote").classList.toggle("hidden", !quick);
   $("#sharedRadar").innerHTML = radarSvg([{scores:s, color:COLOR_FRIEND, fill:"rgba(133,215,182,.14)"}], "Radar del resultado compartido");
   let ref = "";
   if(top){
@@ -94,18 +106,23 @@ function renderCompareTab(){
   $("#compareCompat").textContent = `Compatibilidad política 8D: ${c.compatibility}%`;
   $("#compareBest").textContent = c.bestText;
   $("#compareWorst").textContent = c.worstText;
+  const note = precisionNote(resultMode, friend.mode);
+  $("#comparePrecision").textContent = note;
+  $("#comparePrecision").classList.toggle("hidden", !note);
   return true;
 }
 
 // ---------- Imagen de comparación 1080×1350 ----------
-function renderCompareCard(user, friend, canvas){
+function renderCompareCard(user, friend, canvas, opts){
+  opts = opts || {};
+  const anyQuick = opts.userMode === "quick" || opts.friendMode === "quick";
   const W = 1080, H = 1350;
   canvas = canvas || document.createElement("canvas");
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext("2d");
   const c = compareProfiles(user, friend);
   drawBackground(ctx, W, H);
-  drawHeader(ctx, W, H, {title:"Vos vs tu amigo"}, "POLÍTICA 8D · Vos vs tu amigo");
+  drawHeader(ctx, W, H, {title:"Vos vs tu amigo", badge:anyQuick ? "Incluye versión rápida" : null}, "POLÍTICA 8D · Vos vs tu amigo");
   // leyenda
   const legend = (x, color, text) => {
     ctx.beginPath(); ctx.arc(x + 10, 216, 10, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill();
